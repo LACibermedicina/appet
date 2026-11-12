@@ -8,6 +8,7 @@ import agoraToken from 'agora-token';
 import { askAI, PROMPTS } from './ai.js';
 import { PACKAGES, createPaymentLink, parseStripeWebhook, checkMercadoPago } from './payments.js';
 import { store } from './store.js';
+import { authRouter, sessionMiddleware, requireAuth } from './auth.js';
 
 const { RtcTokenBuilder, RtcRole } = agoraToken;
 const env = process.env;
@@ -23,10 +24,11 @@ app.post('/api/pay/webhook/stripe', express.raw({ type: 'application/json' }), a
   } catch (e) { res.status(400).send(`Webhook: ${e.message}`); }
 });
 
+app.use(sessionMiddleware);
+app.use('/api', authRouter());
 app.use(express.json({ limit: '2mb' }));
 
-// Autenticação de exemplo: troque por sessão/JWT real.
-const userOf = req => String(req.headers['x-user-id'] || 'demo-user');
+const userOf = req => req.user.id; // sempre a conta logada
 const id = p => `${p}_${crypto.randomBytes(6).toString('hex')}`;
 
 /* ---------- App (front-end) ---------- */
@@ -35,7 +37,7 @@ app.use(express.static(PUBLIC_DIR));
 
 /* ---------- IA ---------- */
 // Genérica, usada pelo app: {messages:[{role,content}], json:boolean}
-app.post('/api/ai/raw', async (req, res) => {
+app.post('/api/ai/raw', requireAuth, async (req, res) => {
   try {
     const { messages = [], json = false } = req.body;
     if (!Array.isArray(messages) || !messages.length) return res.status(400).json({ error: 'messages vazio' });
@@ -43,7 +45,7 @@ app.post('/api/ai/raw', async (req, res) => {
   } catch (e) { res.status(503).json({ error: e.message, details: e.details }); }
 });
 
-app.post('/api/ai/:fn', async (req, res) => {
+app.post('/api/ai/:fn', requireAuth, async (req, res) => {
   try {
     const { fn } = req.params;
     const { messages = [], pet = '', input } = req.body;
@@ -61,7 +63,7 @@ app.post('/api/ai/:fn', async (req, res) => {
 });
 
 /* ---------- Vídeo: token Agora (o certificado nunca vai ao app) ---------- */
-app.post('/api/video/token', (req, res) => {
+app.post('/api/video/token', requireAuth, (req, res) => {
   if (!env.AGORA_APP_ID || !env.AGORA_APP_CERTIFICATE) return res.status(503).json({ error: 'Agora não configurado' });
   const channel = String(req.body.channel || id('consulta'));
   const uid = Number(req.body.uid || Math.floor(Math.random() * 1e9));
@@ -71,9 +73,9 @@ app.post('/api/video/token', (req, res) => {
 });
 
 /* ---------- Créditos e pagamentos ---------- */
-app.get('/api/wallet', (req, res) => res.json(store.wallet(userOf(req))));
+app.get('/api/wallet', requireAuth, (req, res) => res.json(store.wallet(userOf(req))));
 
-app.post('/api/pay/link', async (req, res) => {
+app.post('/api/pay/link', requireAuth, async (req, res) => {
   try {
     const userId = userOf(req);
     const { packageId, listing } = req.body; // pacote/anúncio OU item do brechó
@@ -86,7 +88,7 @@ app.post('/api/pay/link', async (req, res) => {
       item = { name: `Brechó: ${listing.title}`, amount: listing.amount + (listing.shipping || 0) + fee, metadata: { listingId: listing.id, sellerId: listing.sellerId } };
     } else return res.status(400).json({ error: 'informe packageId ou listing' });
     const orderId = id('ord');
-    store.createOrder({ id: orderId, userId, item, escrow: !!listing, email: req.body.email });
+    store.createOrder({ id: orderId, userId, item, escrow: !!listing, email: req.user.email });
     const link = await createPaymentLink({ userId, item, orderId });
     store.updateOrder(orderId, { provider: link.provider, providerId: link.id, url: link.url });
     res.json({ orderId, url: link.url, provider: link.provider });
@@ -101,13 +103,13 @@ app.post('/api/pay/webhook/mercadopago', async (req, res) => {
   } catch { res.sendStatus(200); }
 });
 
-app.post('/api/credits/spend', (req, res) => {
+app.post('/api/credits/spend', requireAuth, (req, res) => {
   try { res.json(store.spend(userOf(req), Number(req.body.amount), String(req.body.reason || 'uso'))); }
   catch (e) { res.status(e.status || 400).json({ error: e.message }); }
 });
 
 /* ---------- Brechó: escrow ---------- */
-app.post('/api/orders/:id/confirm', (req, res) => {
+app.post('/api/orders/:id/confirm', requireAuth, (req, res) => {
   const o = store.order(req.params.id);
   if (!o || o.userId !== userOf(req)) return res.sendStatus(404);
   res.json(store.updateOrder(o.id, { status: 'released', releasedAt: new Date().toISOString() }));

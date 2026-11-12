@@ -588,8 +588,11 @@ const S={
   photo:'', withTutor:false, bgPhoto:false, bgTouched:false, lost:false,
   chip:{has:false,num:'',date:'',where:'',rg:'',neutered:false}
 };
+const PDEF=JSON.parse(JSON.stringify({onboarded:S.onboarded,tutor:S.tutor,pet:S.pet,goals:S.goals,time:S.time,story:S.story,photo:S.photo,withTutor:S.withTutor,bgPhoto:S.bgPhoto,bgTouched:S.bgTouched,lost:S.lost,chip:S.chip}));
+let SERVER=false,ME=null,FEED=[];
 try{const sv=JSON.parse(localStorage.getItem('appet-profile')||'null');if(sv){['onboarded','tutor','goals','time','story','photo','withTutor','bgPhoto','bgTouched','lost'].forEach(k=>{if(sv[k]!==undefined)S[k]=sv[k]});Object.assign(S.pet,sv.pet||{});Object.assign(S.chip,sv.chip||{})}}catch(e){}
-function saveProfile(){const o={onboarded:S.onboarded,tutor:S.tutor,pet:S.pet,goals:S.goals,time:S.time,story:S.story,photo:S.photo,withTutor:S.withTutor,bgPhoto:S.bgPhoto,bgTouched:S.bgTouched,lost:S.lost,chip:S.chip};
+let saveT=null;
+function saveProfile(){if(SERVER){if(ME){clearTimeout(saveT);saveT=setTimeout(syncProfile,400)}return}const o={onboarded:S.onboarded,tutor:S.tutor,pet:S.pet,goals:S.goals,time:S.time,story:S.story,photo:S.photo,withTutor:S.withTutor,bgPhoto:S.bgPhoto,bgTouched:S.bgTouched,lost:S.lost,chip:S.chip};
   try{localStorage.setItem('appet-profile',JSON.stringify(o))}catch(e){try{o.photo='';localStorage.setItem('appet-profile',JSON.stringify(o))}catch(e2){}}}
 
 /* ---------- foto & microchip ---------- */
@@ -747,7 +750,10 @@ function submitPrompt(){
 let pendingPrompt=null;
 function startWith(ids,text){
   pendingPrompt={ids,text};
-  if(!S.onboarded) openOnboarding(ids,text); else enterDesk();
+  serverReady.then(()=>{
+    if(SERVER&&!ME){openAuth(()=>{S.onboarded?enterDesk():openOnboarding(ids,text)});return}
+    if(!S.onboarded) openOnboarding(ids,text); else enterDesk();
+  });
 }
 
 /* ---------------- ONBOARDING ---------------- */
@@ -796,7 +802,7 @@ function openOnboarding(ids,text){
       $('#oTime',w).oninput=e=>{$('#oTimeV',w).textContent=e.target.value+' min'};
     }
     const collect=()=>{
-      if(step===0){S.pet.name=$('#oName',w).value.trim()||'Thor';S.tutor=$('#oTutor',w).value.trim();S.pet.breed=$('#oBreed',w).value.trim();S.pet.age=$('#oAge',w).value.trim()}
+      if(step===0){S.pet.name=$('#oName',w).value.trim()||'Meu pet';S.tutor=$('#oTutor',w).value.trim();S.pet.breed=$('#oBreed',w).value.trim();S.pet.age=$('#oAge',w).value.trim()}
       if(step===1){S.goals=[...goals];S.time=+$('#oTime',w).value}
       if(step===2){S.story=$('#oStory',w).value.trim()}
     };
@@ -950,7 +956,7 @@ $('#mbPet').onclick=()=>openApp('dashboard');
 
 /* menus */
 const MENUS={
- appet:[['Sobre o APPET',()=>notify('APPET','Protótipo interativo: dados e IA são simulados nesta versão.','dashboard',5000)],['Ficha do pet (foto, chip)…',()=>openApp('perfil')],['Refazer perfil guiado…',()=>{pendingPrompt={ids:[],text:''};openOnboarding([], '');}],'-',['Voltar à tela inicial',()=>location.reload()],['Reiniciar demonstração',()=>{try{localStorage.removeItem('appet-profile')}catch(e){};location.reload()}]],
+ appet:[[()=>SERVER?(ME?`Sair da conta (${ME.email})`:'Entrar na conta'):'Apagar meus dados deste aparelho',accountAction],'-',['Sobre o APPET',()=>notify('APPET','Protótipo interativo: dados e IA são simulados nesta versão.','dashboard',5000)],['Ficha do pet (foto, chip)…',()=>openApp('perfil')],['Refazer perfil guiado…',()=>{pendingPrompt={ids:[],text:''};openOnboarding([], '');}],'-',['Voltar à tela inicial',()=>location.reload()],['Reiniciar demonstração',()=>{try{localStorage.removeItem('appet-profile')}catch(e){};location.reload()}]],
  arquivo:[['Nova busca…',openSpot,'⌘K'],['Novo story',()=>openApp('reels')],['Registrar treino',()=>openApp('adestra')]],
  janela:[['Minimizar todas',()=>Object.values(wins).forEach(w=>w.style.display='none')],['Fechar todas',()=>Object.keys(wins).forEach(closeApp)],'-',...ORDER.map(id=>[APPS[id].e+'  '+APPS[id].n,()=>openApp(id)])],
  ajuda:[['Como funciona o InterAKão',()=>openApp('interakao')],['Atalhos: ⌘K busca, duplo clique amplia janela',()=>{}]]
@@ -958,7 +964,7 @@ const MENUS={
 $$('.menubar [data-menu]').forEach(m=>m.onclick=e=>{
   e.stopPropagation();const open=$('.drop');if(open){open.remove();$$('.mi.open').forEach(x=>x.classList.remove('open'));if(open.dataset.m===m.dataset.menu)return}
   const d=document.createElement('div');d.className='drop';d.dataset.m=m.dataset.menu;d.style.left=m.offsetLeft+'px';
-  d.innerHTML=MENUS[m.dataset.menu].map((it,i)=>it==='-'?'<hr>':`<button data-i="${i}"><span>${it[0]}</span>${it[2]?`<kbd>${it[2]}</kbd>`:''}</button>`).join('');
+  d.innerHTML=MENUS[m.dataset.menu].map((it,i)=>it==='-'?'<hr>':`<button data-i="${i}"><span>${esc(typeof it[0]==='function'?it[0]():it[0])}</span>${it[2]?`<kbd>${it[2]}</kbd>`:''}</button>`).join('');
   $('.menubar').appendChild(d);m.classList.add('open');
   $$('button',d).forEach(b=>b.onclick=()=>{d.remove();m.classList.remove('open');MENUS[m.dataset.menu][+b.dataset.i][1]()});
 });
@@ -1287,7 +1293,7 @@ const HL=[{n:'Metas',e:'🏆',t:'Meta: 10 dias seguidos de “fica”'},{n:'Tril
 const liked={};
 R.reels=()=>`<div class="stories">
   <label class="story add" style="cursor:pointer"><div class="rg"><div>＋</div></div>Seu story<input type="file" accept="image/*" id="stFile" hidden></label>
-  ${S.stories.map((s,i)=>`<button class="story" data-my="${i}"><div class="rg"><div style="background-image:url(${s.url})"></div></div>${S.pet.name}</button>`).join('')}
+  ${S.stories.map((s,i)=>`<button class="story" data-my="${i}" title="${s.vis==='public'?'Visível para a comunidade':'Só você vê'}"><div class="rg"><div style="background-image:url(${s.url})"></div></div>${s.vis==='public'?'🌎':'🔒'} ${esc(S.pet.name)}</button>`).join('')}
   ${STORIES.map((s,i)=>`<button class="story ${s.seen?'seen':''}" data-st="${i}"><div class="rg"><div>${s.e}</div></div>${s.n}</button>`).join('')}</div>
   <div class="sec">📚 Biblioteca de aventuras e metas do ${S.pet.name}</div>
   <div class="stories">${HL.map((h,i)=>`<button class="story" data-hl="${i}"><div class="rg" style="background:linear-gradient(135deg,#efe8ff,#e3f4ff)"><div>${h.e}</div></div>${h.n}</button>`).join('')}</div>
@@ -1309,7 +1315,7 @@ B.reels=b=>{
   $$('[data-hl]',b).forEach(x=>x.onclick=()=>showStory(HL,+x.dataset.hl));
   $$('[data-my]',b).forEach(x=>x.onclick=()=>showStory(S.stories.map(s=>({n:S.pet.name,url:s.url,t:s.t})),+x.dataset.my));
   $$('[data-like]',b).forEach(x=>x.onclick=e=>{e.stopPropagation();const i=x.dataset.like;liked[i]=!liked[i];rerender('reels')});
-  $('#stFile',b).onchange=e=>{const f=e.target.files[0];if(!f)return;S.stories.unshift({url:URL.createObjectURL(f),t:`Dia de aventura do ${S.pet.name} 🐾`});rerender('reels');addXP(10,'Primeiro story publicado!')};
+  $('#stFile',b).onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)storyComposer(f)};
 };
 
 /* ---- AVENTURAS ---- */
@@ -1542,7 +1548,7 @@ B.perfil=b=>{
 /* =========================================================
    IA com failsafe: Claude (capacidade da página) → modo local
    ========================================================= */
-const API_BASE=location.protocol.startsWith('http')?'/api':null; // servidor próprio
+let API_BASE=null; // vira '/api' quando o servidor do APPET responde
 let samplePromise=null;
 const AI={provider:'…',last:null};
 async function getSample(){
@@ -1822,11 +1828,12 @@ function startVideo(){
    ========================================================= */
 const SLG=['linear-gradient(135deg,#ff6fa8,#ffb347)','linear-gradient(135deg,#3fa9ff,#74ebd5)','linear-gradient(135deg,#2ed8a3,#9be15d)','linear-gradient(135deg,#8b5cf6,#ff6fa8)','linear-gradient(135deg,#ffd93d,#ff9f43)','linear-gradient(135deg,#5b3aa8,#c26bd1)'];
 function loopItems(ch='stories'){
-  const mine=S.stories.map(s=>({n:S.pet.name,url:s.url,t:s.t}));
+  const mine=S.stories.map(s=>({n:S.pet.name+(s.vis==='public'?' · 🌎 comunidade':' · 🔒 só você'),url:s.url,t:s.t}));
+  const feed=(FEED||[]).map(s=>({n:`${s.petName||'Pet'} ${s.petEmoji||''}`,url:s.url,t:s.text}));
   const own=S.photo?[{n:S.pet.name,url:S.photo,t:`${S.pet.name} & ${S.tutor||'tutor'} 💜`}]:[];
   if(ch==='reels')return REELS.map(r=>({n:r.u,e:r.e,t:r.c}));
   if(ch==='aventuras')return HL.map(h=>({n:h.n,e:h.e,t:h.t})).concat(CIRC.map(c=>({n:c.n,e:c.e,t:c.lvl+' · '+c.m.length+' metas'})));
-  return [...mine,...own,...STORIES.map(s=>({n:s.n,e:s.e,t:s.t}))];
+  return [...mine,...own,...feed,...STORIES.map(s=>({n:s.n+' · exemplo',e:s.e,t:s.t}))];
 }
 /* monta um player em loop dentro de el; retorna {stop} */
 function storyLoop(el,{ch='stories',dur=3200,onTV}={}){
@@ -1871,6 +1878,7 @@ addEventListener('resize',()=>{const el=$('.slwrap.free');if(el){el.style.left=c
 let tvLoop=null,tvCh='stories';
 function tvOpen(){return !!$('#tv')}
 function openTV(){
+  if(SERVER&&ME)api('/feed/stories').then(d=>{FEED=d.stories||[]}).catch(()=>{});
   if(tvOpen()){if(tvHidden())$('#tv').style.display='';return}const tv=document.createElement('div');tv.id='tv';
   tv.innerHTML=`<div class="tv-ant"><div class="tv-lights"><button class="c" id="tvC" title="Fechar"></button><button class="m" id="tvM" title="Minimizar"></button><button class="x" id="tvX" title="Maximizar"></button></div><i></i><i></i><em></em></div>
    <div class="tv-body"><div class="tv-row"><div class="tv-screen"><div class="sloop" id="tvLoop"></div></div>
@@ -1975,9 +1983,105 @@ B.match=b=>{
 function planDate(c){const m=S.matches.find(x=>x.id===c.id);const when='Sáb 16:00 · Parque da Cidade';if(m)m.plan=when;S.bookings.push({s:`Encontro com ${c.n} ${c.e}`,w:'PetMatch',slot:when,e:'💞'});refreshAll();notify('Encontro marcado 💞',`${S.pet.name} e ${c.n}: ${when}. Lembrete enviado aos dois tutores.`,'match',5000)}
 function chatWith(c){S.chat.push({from:c.n,pet:c.e,txt:pick(['Oi! Bora cheirar uns postes juntos? 🐾','Vi seu perfil… gostei do seu focinho 😄','Topa um passeio no sábado?']),type:'brincar'});openApp('interakao');rerender('interakao')}
 
+/* =========================================================
+   CONTAS: cada pessoa só vê os próprios dados
+   ========================================================= */
+async function api(path,opts={}){
+  const o={credentials:'same-origin',...opts,headers:{'content-type':'application/json',...(opts.headers||{})}};
+  if(o.body&&typeof o.body!=='string')o.body=JSON.stringify(o.body);
+  const r=await fetch('/api'+path,o);const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw Object.assign(new Error(d.error||('Erro '+r.status)),{status:r.status});return d;
+}
+function applyProfile(p){
+  ['onboarded','tutor','goals','time','story','photo','withTutor','bgPhoto','bgTouched','lost','petSex'].forEach(k=>{if(p[k]!==undefined)S[k]=JSON.parse(JSON.stringify(p[k]))});
+  S.pet=Object.assign({},PDEF.pet,p.pet||{});S.chip=Object.assign({},PDEF.chip,p.chip||{});
+}
+async function loadAccount(){
+  applyProfile(PDEF);S.stories=[];FEED=[];
+  const {profile}=await api('/me/profile');if(profile)applyProfile(profile);
+  if(!profile){S.tutor=ME.name||'';S.pet=Object.assign({},PDEF.pet,{name:'',breed:'',age:''})}
+  S._hadPhoto=!!S.photo;
+  try{S.stories=(await api('/me/stories')).stories.map(x=>({id:x.id,url:x.url,t:x.text,vis:x.visibility}))}catch(e){}
+  try{FEED=(await api('/feed/stories')).stories||[]}catch(e){}
+  applyBg();if(deskOn){renderDesk(new Set(S.active));refreshAll()}
+}
+async function syncProfile(){
+  const p={onboarded:S.onboarded,tutor:S.tutor,pet:S.pet,goals:S.goals,time:S.time,story:S.story,withTutor:S.withTutor,bgPhoto:S.bgPhoto,bgTouched:S.bgTouched,lost:S.lost,chip:S.chip,petSex:S.petSex};
+  try{
+    await api('/me/profile',{method:'PUT',body:p});
+    if(S.photo&&S.photo.startsWith('data:')){const d=S.photo;const r=await api('/me/photo',{method:'PUT',body:{image:d}});if(S.photo===d)S.photo=r.photo}
+    else if(!S.photo&&S._hadPhoto){await api('/me/photo',{method:'PUT',body:{image:null}})}
+    S._hadPhoto=!!S.photo;
+  }catch(e){notify('Não foi possível salvar',e.message,'perfil',4500)}
+}
+function openAuth(done){
+  let mode='login',vals={n:'',e:'',p:''};
+  const w=document.createElement('div');w.className='modalwrap';document.body.appendChild(w);
+  const draw=(err='',busy=false)=>{
+    w.innerHTML=`<div class="modal" style="width:min(420px,100%)"><div class="between"><span class="logo"><span class="pawmark">🐾</span>APPET</span><button class="btn g sm" id="aX">✕</button></div>
+      <h2 style="margin-top:14px">${mode==='login'?'Entrar':'Criar conta'}</h2><p class="m">Tudo o que você cadastra fica só na sua conta. Ninguém mais vê, a não ser o que você publicar para a comunidade.</p>
+      <div class="tabs"><button data-am="login" class="${mode==='login'?'on':''}">Entrar</button><button data-am="register" class="${mode==='register'?'on':''}">Criar conta</button></div>
+      <form id="aF">${mode==='register'?`<div class="f"><label>Seu nome</label><input id="aN" autocomplete="name" value="${esc(vals.n)}"></div>`:''}
+       <div class="f"><label>E-mail</label><input id="aE" type="email" autocomplete="email" required value="${esc(vals.e)}"></div>
+       <div class="f"><label>Senha${mode==='register'?' (mínimo 8 caracteres)':''}</label><input id="aP" type="password" autocomplete="${mode==='login'?'current-password':'new-password'}" minlength="8" required></div>
+       ${err?`<p style="color:#c02a2a;font-size:13px;margin-bottom:10px">${esc(err)}</p>`:''}
+       <button class="btn p" style="width:100%;justify-content:center" ${busy?'disabled':''}>${busy?'Aguarde…':mode==='login'?'Entrar':'Criar conta'}</button></form></div>`;
+    $('#aX',w).onclick=()=>w.remove();
+    $$('[data-am]',w).forEach(b=>b.onclick=()=>{mode=b.dataset.am;draw()});
+    $('#aF',w).onsubmit=async e=>{e.preventDefault();
+      vals={n:($('#aN',w)||{}).value||'',e:$('#aE',w).value.trim(),p:$('#aP',w).value};
+      draw('',true);
+      try{const d=await api('/auth/'+mode,{method:'POST',body:{name:vals.n,email:vals.e,password:vals.p}});ME=d.user;await loadAccount();w.remove();
+        notify(mode==='login'?'Bem-vindo de volta 🐾':'Conta criada 🎉',`Conectado como ${ME.email}. Seus dados ficam só na sua conta.`,'perfil',4500);done&&done()}
+      catch(err){draw(err.message)}
+    };
+    setTimeout(()=>{const i=$(mode==='register'?'#aN':'#aE',w);if(i&&!i.value)i.focus()},50);
+  };
+  draw();
+}
+async function accountAction(){
+  if(SERVER&&ME){try{await api('/auth/logout',{method:'POST'})}catch(e){}}
+  else if(SERVER){openAuth(()=>{if(!deskOn)return;loadAccount()});return}
+  try{['appet-profile','appet-loop','appet-loop-pos'].forEach(k=>localStorage.removeItem(k))}catch(e){}
+  location.reload();
+}
+async function initServer(){
+  try{const r=await fetch('/api/health',{cache:'no-store'});if(!r.ok)return;const h=await r.json();if(!h||h.ok!==true)return}catch(e){return}
+  SERVER=true;API_BASE='/api';
+  // sem conta, nada fica guardado no aparelho: limpa dados antigos que outra pessoa possa ter deixado
+  try{localStorage.removeItem('appet-profile')}catch(e){}
+  applyProfile(PDEF);S.stories=[];applyBg();
+  try{const d=await api('/auth/me');if(d.user){ME=d.user;await loadAccount()}}catch(e){}
+  buildHomeLoop();
+}
+function storyComposer(file){
+  loadPhoto(file,d=>{if(!d)return;let vis='private';
+    const w=document.createElement('div');w.className='modalwrap';document.body.appendChild(w);
+    w.innerHTML=`<div class="modal" style="width:min(440px,100%)"><h2>Novo story</h2>
+      <div class="photodrop" style="height:230px;background-image:url(${d});margin:12px 0;cursor:default"></div>
+      <div class="f"><label>Legenda</label><input id="stT" maxlength="140" value="Dia de aventura do ${esc(S.pet.name)} 🐾"></div>
+      <div class="f"><label>Quem pode ver?</label><div class="pick" id="stV"><button type="button" class="on" data-v="private">🔒 Só eu</button><button type="button" data-v="public">🌎 Comunidade</button></div></div>
+      <p class="mut" id="stH">Fica só na sua conta. Ninguém mais vê.</p>
+      <div class="mact"><button class="btn g" id="stC">Cancelar</button><button class="btn p" id="stP">Publicar</button></div></div>`;
+    $$('#stV button',w).forEach(b=>b.onclick=()=>{vis=b.dataset.v;$$('#stV button',w).forEach(x=>x.classList.toggle('on',x===b));
+      $('#stH',w).textContent=vis==='public'?'Aparece na APPeTV e nos stories de outros tutores.':'Fica só na sua conta. Ninguém mais vê.'});
+    $('#stC',w).onclick=()=>w.remove();
+    $('#stP',w).onclick=async()=>{const t=$('#stT',w).value.trim();const btn=$('#stP',w);btn.disabled=true;btn.textContent='Enviando…';
+      try{
+        if(SERVER&&ME){const r=await api('/me/stories',{method:'POST',body:{image:d,text:t,visibility:vis}});S.stories.unshift({id:r.story.id,url:r.story.url,t:r.story.text,vis:r.story.visibility})}
+        else S.stories.unshift({url:d,t,vis});
+        w.remove();rerender('reels');
+        if(!S.storyXP){S.storyXP=1;addXP(10,'Primeiro story publicado!')}
+        notify('Story publicado',vis==='public'?'Visível para a comunidade 🌎':'Só você vê 🔒','reels',3000);
+      }catch(e){btn.disabled=false;btn.textContent='Publicar';notify('Não foi possível publicar',e.message,'reels',4500)}
+    };
+  });
+}
+
 /* ---------------- BOOT ---------------- */
 applyBg();
 buildHome();
+const serverReady=initServer();
 </script>
 </body>
 </html>

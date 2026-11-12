@@ -6,9 +6,12 @@
   "description": "Backend do APPET: IA com failsafe, vídeo (Agora), pagamentos por link, créditos e e-mail",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
+    "dev": "node --watch src/server.js",
+    "test": "node test/privacidade.mjs"
   },
-  "engines": { "node": ">=18.17" },
+  "engines": {
+    "node": ">=18.17"
+  },
   "dependencies": {
     "agora-token": "^2.0.4",
     "dotenv": "^16.4.5",
