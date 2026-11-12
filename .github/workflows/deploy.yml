@@ -12,14 +12,26 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Só roda depois que os secrets forem cadastrados no repositório
+    # Ativado automaticamente por deploy/bootstrap.sh
     if: ${{ vars.VPS_DEPLOY_ENABLED == 'true' }}
     steps:
-      - name: Atualizar e reiniciar via SSH
+      - name: Atualizar código, chaves e reiniciar via SSH
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          APPET_ENV: ${{ secrets.APPET_ENV }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT || 22 }}
-          script: bash /opt/appet/deploy/update.sh
+          envs: APPET_ENV
+          script: |
+            set -e
+            S=""; [ "$(id -u)" -ne 0 ] && S="sudo"
+            bash /opt/appet/deploy/update.sh
+            if [ -n "$APPET_ENV" ]; then
+              umask 077
+              printf '%s\n' "$APPET_ENV" > /tmp/appet.env
+              $S bash /opt/appet/deploy/apply-env.sh /tmp/appet.env
+              rm -f /tmp/appet.env
+            fi

@@ -64,21 +64,34 @@ O app roda como serviço `systemd` numa porta interna livre (escolhida automatic
 ### 1. DNS
 No painel do domínio `m3d.pro`, crie um registro **A**: `appet` → `159.223.22.82`.
 
-### 2. Instalação (uma vez, na VPS como root)
+### 2. Tudo automático: um comando no seu computador
+Requisitos: `ssh`, `scp` e o [GitHub CLI](https://cli.github.com) logado (`gh auth login`). No Windows, use WSL ou Git Bash.
+
+```bash
+git clone https://github.com/LACibermedicina/appet && cd appet
+cp server/.env.example server/.env    # preencha com as chaves NOVAS (o arquivo não vai para o Git)
+bash deploy/bootstrap.sh root@159.223.22.82
+```
+Ele pede a senha da VPS **uma vez** e depois:
+1. cria uma chave SSH só para publicação e a instala na VPS;
+2. instala o app (Node 20, nginx, porta livre a partir de 3100, serviço `appet`, HTTPS para `appet.m3d.pro`);
+3. envia suas chaves para `/opt/appet/server/.env` (mantendo a porta escolhida) e reinicia o app;
+4. cadastra no GitHub os secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `APPET_ENV` e a variável `VPS_DEPLOY_ENABLED=true`;
+5. dispara a primeira publicação automática.
+
+Variáveis opcionais: `CERTBOT_EMAIL=...`, `APPET_PORT=4100`, `VPS_SSH_PORT=2222`.
+
+### 3. Depois disso
+- **Todo push na `main`** publica sozinho: atualiza o código, as chaves e reinicia.
+- **Trocar chaves:** edite `server/.env` e rode `bash deploy/set-keys.sh`.
+
+### Instalação manual (alternativa)
+Na VPS como root:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/LACibermedicina/appet/main/deploy/setup-vps.sh -o setup-vps.sh
 sudo CERTBOT_EMAIL=seu@email bash setup-vps.sh
+bash /opt/appet/deploy/apply-env.sh /caminho/do/seu.env
 ```
-O script instala Node 20, nginx e certbot, clona o repositório em `/opt/appet`, escolhe a porta livre, cria o serviço `appet`, configura o nginx para `appet.m3d.pro` e emite o certificado. No final ele mostra a porta escolhida. Para forçar uma porta específica, use `APPET_PORT=4100`.
-
-Depois, coloque as chaves **novas** em `/opt/appet/server/.env` e rode `systemctl restart appet`.
-
-### 3. Publicação automática a cada push (opcional)
-No GitHub: **Settings → Secrets and variables → Actions**
-- Secrets: `VPS_HOST` = `159.223.22.82`, `VPS_USER` (ex.: `root`), `VPS_SSH_KEY` (chave privada SSH com acesso à VPS) e, se não for a 22, `VPS_SSH_PORT`.
-- Variable: `VPS_DEPLOY_ENABLED` = `true`
-
-A partir daí, todo push na `main` roda `deploy/update.sh` na VPS: atualiza o código, instala dependências, reinicia o serviço e confere `/api/health`.
 
 ### Comandos úteis
 ```bash
