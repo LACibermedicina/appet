@@ -1,0 +1,19 @@
+{
+  "name": "appet-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Backend do APPET: IA com failsafe, vídeo (Agora), pagamentos por link, créditos e e-mail",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": { "node": ">=18.17" },
+  "dependencies": {
+    "agora-token": "^2.0.4",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "nodemailer": "^6.9.14",
+    "stripe": "^16.0.0"
+  }
+}
