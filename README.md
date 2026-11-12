@@ -59,43 +59,25 @@ Com o servidor rodando, o app passa a usar a IA de verdade pela rota `/api/ai/ra
 
 ## Publicação na VPS (appet.m3d.pro)
 
-O app roda como serviço `systemd` numa porta interna livre (escolhida automaticamente a partir de **3100**, sempre acima de 1000). O **nginx** recebe `appet.m3d.pro` e repassa para essa porta (proxy reverso). O HTTPS vem do Let's Encrypt.
+Mesmo modelo do **revalida**: a cada push na `main`, o GitHub Actions copia `server/` e `deploy/` para `/opt/appet` na VPS e roda `deploy/vps-preparar.sh`.
+- **1ª vez:** instala o Node 20, escolhe uma porta livre a partir de **3100** (sempre > 1000, só escuta em 127.0.0.1), cria o serviço `appet`, configura o proxy reverso `appet.m3d.pro` (usa o nginx ou o Caddy que já estiverem na VPS, sem mexer nos outros sites) e emite o HTTPS.
+- **Depois:** atualiza dependências, reinicia e confere `/api/health`.
 
-### 1. DNS
-No painel do domínio `m3d.pro`, crie um registro **A**: `appet` → `159.223.22.82`.
+### Configurar (uma vez)
+1. **DNS:** registro **A** `appet` → `159.223.22.82` no domínio `m3d.pro`.
+2. **GitHub → Settings → Secrets and variables → Actions → New repository secret:**
+   - `VPS_SSH_KEY`: a mesma chave privada SSH usada no revalida (acesso root à VPS).
+   - `APPET_ENV` *(opcional)*: o conteúdo inteiro do seu `server/.env` com as chaves novas.
+3. **Actions → Publicar na VPS → Run workflow** (ou faça qualquer push).
 
-### 2. Tudo automático: um comando no seu computador
-Requisitos: `ssh`, `scp` e o [GitHub CLI](https://cli.github.com) logado (`gh auth login`). No Windows, use WSL ou Git Bash.
+Padrões (mude em *Variables* se precisar): `VPS_HOST=159.223.22.82`, `VPS_USER=root`, `VPS_PORT=22`, `VPS_DIR=/opt/appet`, `DOMINIO=appet.m3d.pro`, `EMAIL_CERT`.
 
+### Trocar chaves depois
+Atualize o segredo `APPET_ENV` no GitHub e rode o workflow, ou, com o GitHub CLI: `bash deploy/set-keys.sh`.
+
+### Na VPS
 ```bash
-git clone https://github.com/LACibermedicina/appet && cd appet
-cp server/.env.example server/.env    # preencha com as chaves NOVAS (o arquivo não vai para o Git)
-bash deploy/bootstrap.sh root@159.223.22.82
-```
-Ele pede a senha da VPS **uma vez** e depois:
-1. cria uma chave SSH só para publicação e a instala na VPS;
-2. instala o app (Node 20, nginx, porta livre a partir de 3100, serviço `appet`, HTTPS para `appet.m3d.pro`);
-3. envia suas chaves para `/opt/appet/server/.env` (mantendo a porta escolhida) e reinicia o app;
-4. cadastra no GitHub os secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `APPET_ENV` e a variável `VPS_DEPLOY_ENABLED=true`;
-5. dispara a primeira publicação automática.
-
-Variáveis opcionais: `CERTBOT_EMAIL=...`, `APPET_PORT=4100`, `VPS_SSH_PORT=2222`.
-
-### 3. Depois disso
-- **Todo push na `main`** publica sozinho: atualiza o código, as chaves e reinicia.
-- **Trocar chaves:** edite `server/.env` e rode `bash deploy/set-keys.sh`.
-
-### Instalação manual (alternativa)
-Na VPS como root:
-```bash
-curl -fsSL https://raw.githubusercontent.com/LACibermedicina/appet/main/deploy/setup-vps.sh -o setup-vps.sh
-sudo CERTBOT_EMAIL=seu@email bash setup-vps.sh
-bash /opt/appet/deploy/apply-env.sh /caminho/do/seu.env
-```
-
-### Comandos úteis
-```bash
-systemctl status appet          # estado do serviço
-journalctl -u appet -f          # logs ao vivo
-bash /opt/appet/deploy/update.sh  # atualizar à mão
+systemctl status appet            # estado
+journalctl -u appet -f            # logs
+cd /opt/appet && bash deploy/vps-preparar.sh --dominio appet.m3d.pro   # reinstalar/atualizar à mão
 ```

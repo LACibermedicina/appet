@@ -1,37 +1,77 @@
-name: Deploy na VPS
+# Publica o APPET na VPS a cada push na main (ou à mão: Actions > "Publicar na VPS" > Run workflow).
+# Mesmo modelo do revalida: copia server/ e deploy/ para a VPS (rsync: não apaga nada lá e não toca no .env)
+# e roda deploy/vps-preparar.sh, que na 1ª vez instala tudo (Node, porta livre > 1000, proxy reverso + HTTPS)
+# e nas seguintes só atualiza e reinicia.
+#
+# Segredo OBRIGATÓRIO (Settings > Secrets and variables > Actions > Secrets):
+#   VPS_SSH_KEY   chave privada SSH com acesso de root à VPS (pode ser a mesma do revalida)
+# Segredo OPCIONAL:
+#   APPET_ENV     conteúdo completo do server/.env (chaves de IA, Agora, pagamentos, e-mail)
+# Variáveis OPCIONAIS (aba Variables), com estes padrões:
+#   VPS_HOST (159.223.22.82)  VPS_USER (root)  VPS_PORT (22)  VPS_DIR (/opt/appet)
+#   DOMINIO (appet.m3d.pro)  EMAIL_CERT (e-mail para o Let's Encrypt)
+name: Publicar na VPS
 
 on:
   push:
     branches: [main]
+    paths: ['server/**', 'deploy/**', '.github/workflows/deploy.yml']
   workflow_dispatch:
 
 concurrency:
-  group: deploy-vps
+  group: publicar-vps
   cancel-in-progress: false
 
+env:
+  HOST: ${{ vars.VPS_HOST || '159.223.22.82' }}
+  USUARIO: ${{ vars.VPS_USER || 'root' }}
+  PORTA_SSH: ${{ vars.VPS_PORT || '22' }}
+  PASTA: ${{ vars.VPS_DIR || '/opt/appet' }}
+  DOMINIO: ${{ vars.DOMINIO || 'appet.m3d.pro' }}
+  EMAIL_CERT: ${{ vars.EMAIL_CERT || '' }}
+
 jobs:
-  deploy:
+  publicar:
     runs-on: ubuntu-latest
-    # Ativado automaticamente por deploy/bootstrap.sh
-    if: ${{ vars.VPS_DEPLOY_ENABLED == 'true' }}
+    timeout-minutes: 30
     steps:
-      - name: Atualizar código, chaves e reiniciar via SSH
-        uses: appleboy/ssh-action@v1.2.0
+      - uses: actions/checkout@v5
+
+      - name: Preparar SSH
+        env:
+          KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "::error::Falta o segredo VPS_SSH_KEY (Settings > Secrets and variables > Actions). Use a mesma chave do revalida."; exit 1
+          fi
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$KEY" | tr -d '\r' > ~/.ssh/vps && chmod 600 ~/.ssh/vps
+          ssh-keyscan -p "$PORTA_SSH" -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          echo "SSH=ssh -i $HOME/.ssh/vps -p $PORTA_SSH -o ServerAliveInterval=30 $USUARIO@$HOST" >> "$GITHUB_ENV"
+          echo "SUDO=$([ "$USUARIO" = root ] && echo '' || echo 'sudo -n')" >> "$GITHUB_ENV"
+
+      - name: Testar acesso
+        run: $SSH "echo conectado em \$(hostname) como \$(whoami)"
+
+      - name: Copiar o app para a VPS
+        run: |
+          $SSH "$SUDO mkdir -p '$PASTA' && $SUDO chown -R \$(whoami) '$PASTA' && (command -v rsync >/dev/null || ($SUDO apt-get update -qq && $SUDO apt-get install -y -qq rsync))"
+          rsync -az --stats \
+            --exclude '.env' --exclude 'node_modules/' --exclude 'data.json' --exclude '.DS_Store' \
+            -e "ssh -i $HOME/.ssh/vps -p $PORTA_SSH" server deploy "$USUARIO@$HOST:$PASTA/" | tail -8
+
+      - name: Enviar chaves (se o segredo APPET_ENV existir)
         env:
           APPET_ENV: ${{ secrets.APPET_ENV }}
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_SSH_PORT || 22 }}
-          envs: APPET_ENV
-          script: |
-            set -e
-            S=""; [ "$(id -u)" -ne 0 ] && S="sudo"
-            bash /opt/appet/deploy/update.sh
-            if [ -n "$APPET_ENV" ]; then
-              umask 077
-              printf '%s\n' "$APPET_ENV" > /tmp/appet.env
-              $S bash /opt/appet/deploy/apply-env.sh /tmp/appet.env
-              rm -f /tmp/appet.env
-            fi
+        run: |
+          if [ -n "$APPET_ENV" ]; then
+            printf '%s\n' "$APPET_ENV" | $SSH "umask 077; cat > /tmp/appet.env"
+            echo "ENV_ARG=--env /tmp/appet.env" >> "$GITHUB_ENV"
+          else
+            echo "Sem APPET_ENV: mantém o server/.env que já está na VPS."
+          fi
+
+      - name: Instalar ou atualizar, proxy reverso e HTTPS
+        run: |
+          EXTRA=""; [ -n "$EMAIL_CERT" ] && EXTRA="--email $EMAIL_CERT"
+          $SSH "cd '$PASTA' && $SUDO bash deploy/vps-preparar.sh --dominio '$DOMINIO' $EXTRA ${ENV_ARG:-}"

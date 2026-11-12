@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Atualiza as chaves do app: envia server/.env para o secret APPET_ENV e republica.
+# Atualiza as chaves do app: envia server/.env para o segredo APPET_ENV e republica (requer gh auth login).
 #   bash deploy/set-keys.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."

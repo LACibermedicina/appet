@@ -12,6 +12,7 @@ import { store } from './store.js';
 const { RtcTokenBuilder, RtcRole } = agoraToken;
 const env = process.env;
 const app = express();
+app.set('trust proxy', 1); // atrás do nginx/Caddy
 
 // O webhook do Stripe precisa do corpo bruto: registre antes do express.json()
 app.post('/api/pay/webhook/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -142,4 +143,4 @@ app.get('/api/health', (_req, res) => res.json({
   mail: !!mailer,
 }));
 
-app.listen(Number(env.PORT || 3000), () => console.log(`APPET server em ${env.PUBLIC_URL || 'http://localhost:' + (env.PORT || 3000)}`));
+app.listen(Number(env.PORT || 3000), env.HOST || '0.0.0.0', () => console.log(`APPET server em ${env.PUBLIC_URL || 'http://localhost:' + (env.PORT || 3000)}`));
