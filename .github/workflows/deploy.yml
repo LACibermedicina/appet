@@ -1,0 +1,25 @@
+name: Deploy na VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Só roda depois que os secrets forem cadastrados no repositório
+    if: ${{ vars.VPS_DEPLOY_ENABLED == 'true' }}
+    steps:
+      - name: Atualizar e reiniciar via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          script: bash /opt/appet/deploy/update.sh

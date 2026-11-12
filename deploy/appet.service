@@ -1,0 +1,18 @@
+[Unit]
+Description=APPET (Node.js)
+After=network.target
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__DIR__/server
+EnvironmentFile=__DIR__/server/.env
+ExecStart=/usr/bin/env node src/server.js
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=full
+ReadWritePaths=__DIR__/server
+
+[Install]
+WantedBy=multi-user.target

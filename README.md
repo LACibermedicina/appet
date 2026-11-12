@@ -56,3 +56,33 @@ Com o servidor rodando, o app passa a usar a IA de verdade pela rota `/api/ai/ra
 - As chaves ficam **só** no `.env` do servidor; nunca no `index.html`.
 - As credenciais coladas na conversa devem ser **trocadas** antes de usar (senha SMTP, token GitHub, chaves de IA e Agora).
 - Não faça commit do `.env` (o `.gitignore` já ignora).
+
+## Publicação na VPS (appet.m3d.pro)
+
+O app roda como serviço `systemd` numa porta interna livre (escolhida automaticamente a partir de **3100**, sempre acima de 1000). O **nginx** recebe `appet.m3d.pro` e repassa para essa porta (proxy reverso). O HTTPS vem do Let's Encrypt.
+
+### 1. DNS
+No painel do domínio `m3d.pro`, crie um registro **A**: `appet` → `159.223.22.82`.
+
+### 2. Instalação (uma vez, na VPS como root)
+```bash
+curl -fsSL https://raw.githubusercontent.com/LACibermedicina/appet/main/deploy/setup-vps.sh -o setup-vps.sh
+sudo CERTBOT_EMAIL=seu@email bash setup-vps.sh
+```
+O script instala Node 20, nginx e certbot, clona o repositório em `/opt/appet`, escolhe a porta livre, cria o serviço `appet`, configura o nginx para `appet.m3d.pro` e emite o certificado. No final ele mostra a porta escolhida. Para forçar uma porta específica, use `APPET_PORT=4100`.
+
+Depois, coloque as chaves **novas** em `/opt/appet/server/.env` e rode `systemctl restart appet`.
+
+### 3. Publicação automática a cada push (opcional)
+No GitHub: **Settings → Secrets and variables → Actions**
+- Secrets: `VPS_HOST` = `159.223.22.82`, `VPS_USER` (ex.: `root`), `VPS_SSH_KEY` (chave privada SSH com acesso à VPS) e, se não for a 22, `VPS_SSH_PORT`.
+- Variable: `VPS_DEPLOY_ENABLED` = `true`
+
+A partir daí, todo push na `main` roda `deploy/update.sh` na VPS: atualiza o código, instala dependências, reinicia o serviço e confere `/api/health`.
+
+### Comandos úteis
+```bash
+systemctl status appet          # estado do serviço
+journalctl -u appet -f          # logs ao vivo
+bash /opt/appet/deploy/update.sh  # atualizar à mão
+```
