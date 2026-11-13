@@ -522,6 +522,36 @@ canvas.wave{width:100%;height:90px;display:block;border-radius:14px;background:#
 .rkadmin{margin-top:14px;background:#faf8ff}
 .badge small{font-size:10px}
 
+
+/* ---- tela inicial: ícones de vidro girando + avatares 3D ---- */
+#orbit .orb .ai{background:none!important;isolation:isolate;overflow:hidden;box-shadow:0 10px 24px rgba(70,40,160,.18),inset 0 0 0 1.5px rgba(255,255,255,.75),inset 0 -6px 14px rgba(255,255,255,.35)}
+#orbit .orb .ai::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--g);opacity:.55}
+#orbit .orb .ai{backdrop-filter:blur(10px) saturate(1.4);-webkit-backdrop-filter:blur(10px) saturate(1.4);background-color:rgba(255,255,255,.38)!important}
+#orbit .orb.boop .ai{animation:boop .9s cubic-bezier(.2,1.6,.4,1)}
+@keyframes boop{0%{transform:scale(1)}20%{transform:scale(1.45) rotate(-14deg)}45%{transform:scale(.9) rotate(200deg)}70%{transform:scale(1.18) rotate(350deg)}100%{transform:scale(1) rotate(360deg)}}
+#orbit .orb.boop .ai{box-shadow:0 0 0 6px rgba(255,217,61,.35),0 0 30px 8px rgba(255,200,80,.55),inset 0 0 0 1.5px #fff}
+#pets{position:absolute;inset:0;z-index:4;pointer-events:none}
+@media (max-width:760px){.pbub{font-size:12px;padding:6px 10px}}
+.pet{position:absolute;left:0;top:0;pointer-events:none;will-change:transform}
+.pbody{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:50% 100%;pointer-events:auto;cursor:grab;filter:drop-shadow(0 10px 14px rgba(60,30,120,.22))}
+.pet.dragging .pbody{cursor:grabbing}
+.pbody img{position:absolute;left:0;bottom:0;width:100%;height:100%;object-fit:contain;object-position:50% 100%;user-select:none;-webkit-user-drag:none}
+.pshadow{position:absolute;left:0;top:0;width:150px;height:22px;border-radius:50%;background:radial-gradient(closest-side,rgba(40,20,90,.45),transparent);margin-top:-4px}
+.pbub{position:absolute;left:0;top:0;transform:translate(-50%,calc(-100% - var(--ph,0px)));white-space:nowrap;background:rgba(40,32,70,.78);color:#fff;font-size:14px;font-weight:700;padding:8px 14px;border-radius:14px;opacity:0;pointer-events:none;backdrop-filter:blur(8px)}
+.pbub::after{content:"";position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);border:8px solid transparent;border-top-color:rgba(40,32,70,.78);border-bottom:0}
+.pbub.show{animation:bub 2.6s cubic-bezier(.2,1.4,.4,1) forwards}
+@keyframes bub{0%{opacity:0;transform:translate(-50%,calc(-100% - var(--ph,0px) + 12px)) scale(.7)}12%,82%{opacity:1;transform:translate(-50%,calc(-100% - var(--ph,0px))) scale(1)}100%{opacity:0;transform:translate(-50%,calc(-100% - var(--ph,0px) - 10px)) scale(.95)}}
+.spark{position:fixed;width:8px;height:8px;border-radius:50%;pointer-events:none;z-index:300;box-shadow:0 0 10px 2px rgba(255,220,120,.8);animation:spark .85s cubic-bezier(.2,.7,.4,1) forwards}
+@keyframes spark{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+#decor{position:absolute;inset:0;pointer-events:none;z-index:0}
+.dec{position:absolute;animation:decf 9s ease-in-out infinite;opacity:.8;filter:drop-shadow(0 8px 12px rgba(80,50,160,.15))}
+.dec.ball{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,var(--c) 60%)}
+.dec.bone{width:70px;height:22px;border-radius:12px;background:linear-gradient(180deg,#fff,var(--c));transform:rotate(-25deg)}
+.dec.bone::before,.dec.bone::after{content:"";position:absolute;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,var(--c));box-shadow:0 14px 0 -2px var(--c)}
+.dec.bone::before{left:-10px;top:-8px}.dec.bone::after{right:-10px;top:-8px}
+@keyframes decf{0%,100%{translate:0 0;rotate:0deg}50%{translate:10px -18px;rotate:12deg}}
+@media (prefers-reduced-motion:reduce){.dec,.orb{animation:none!important}}
+
 /* foto de fundo + identificação */
 #photoBg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .8s}
 #photoBg.on{opacity:1}
@@ -568,7 +598,9 @@ body.hasphoto .dicon span{background:rgba(255,255,255,.8);padding:1px 7px;border
 
 <!-- HOME -->
 <section id="home">
+  <div id="decor" aria-hidden="true"></div>
   <div id="orbit"></div>
+  <div id="pets"></div>
   <div class="center">
     <span class="logo"><span class="pawmark">🐾</span>APPET</span>
     <h1 class="hello">O que você e seu pet<br><em>precisam hoje?</em></h1>
@@ -715,7 +747,7 @@ const APPS={
   perfil:{n:'Ficha do Pet',e:'🪪',g:'linear-gradient(135deg,#1d1b3a,#8b5cf6)',d:'Foto, microchip, RG Animal e carteirinha'},
 };
 const ORDER=Object.keys(APPS);
-const icon=(id,extra='')=>`<div class="ai" style="background:${APPS[id].g}" ${extra}>${APPS[id].e}</div>`;
+const icon=(id,extra='')=>`<div class="ai" style="background:${APPS[id].g};--g:${APPS[id].g}" ${extra}>${APPS[id].e}</div>`;
 
 /* ---------------- ROUTING (prompt → módulos) ---------------- */
 const ROUTES=[
@@ -771,7 +803,8 @@ function buildHome(){
   const ch=$('#chips');
   ch.innerHTML=CHIPS.map(c=>`<button class="chip" type="button">${c}</button>`).join('');
   $$('.chip',ch).forEach((b,i)=>b.onclick=()=>{$('#pin').value=EXAMPLES[[0,1,2,4,3,5][i]];submitPrompt()});
-  layoutOrbit();buildHomeLoop();
+  layoutOrbit();buildHomeLoop();startHomeAnim();
+  $('#decor').innerHTML=[['bone','9%','22%',0],['ball','16%','70%',1],['bone','82%','14%',2],['ball','88%','58%',3],['ball','70%','86%',4],['bone','28%','88%',5],['ball','40%','10%',6]].map(([k,x,y,i])=>`<span class="dec ${k}" style="left:${x};top:${y};animation-delay:${-i*1.3}s;--c:${['#d9ccff','#bdf2df','#ffd1e6','#ffe9a8','#cfe6ff','#e6d4ff','#ffd8c2'][i]}"></span>`).join('');
   // typewriter placeholder
   let ei=0,ci=0,del=false;const inp=$('#pin');
   (function tick(){
@@ -783,20 +816,103 @@ function buildHome(){
     setTimeout(tick,del?22:55);
   })();
 }
-function layoutOrbit(){
-  const o=$('#orbit');const W=innerWidth,H=innerHeight;const mob=W<760;
-  const rx=mob?W*.42:Math.min(W*.42,620), ry=mob?H*.40:Math.min(H*.40,360);
-  o.innerHTML=ORDER.map((id,i)=>{
-    let a=-Math.PI/2+i*(2*Math.PI/ORDER.length);
-    let x=W/2+Math.cos(a)*rx, y=H/2+Math.sin(a)*ry;
-    if(mob){ // faixas no topo e na base no celular
-      const N=ORDER.length,hh=Math.ceil(N/2),top=i<hh,n=top?hh:N-hh,j=top?i:i-hh;
-      x=W*(j+.5)/n; y=top?(j%2?96:52):H-(j%2?96:52);
-    }
-    return `<button class="orb" data-id="${id}" style="left:${x}px;top:${y}px;animation-delay:${-i*.45}s">${icon(id)}<span class="lbl">${APPS[id].n}</span></button>`;
-  }).join('');
-  $$('.orb',o).forEach(b=>b.onclick=()=>startWith([b.dataset.id],APPS[b.dataset.id].n));
+/* =========================================================
+   ÓRBITA GIRATÓRIA + AVATARES 3D DOS SHIH TZUS
+   ========================================================= */
+const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ORB={theta:0,paused:false,els:[],pos:[],raf:0,last:0};
+function orbitGeom(){const W=innerWidth,H=innerHeight,mob=W<760;return{W,H,mob,rx:mob?W*.42:Math.min(W*.42,620),ry:mob?H*.40:Math.min(H*.40,360)}}
+function orbPos(i,n,th,g){
+  if(g.mob){const hh=Math.ceil(n/2),top=i<hh,m=top?hh:n-hh,j=top?i:i-hh;return{x:g.W*(j+.5)/m,y:top?(j%2?96:52):g.H-(j%2?96:52)}}
+  const a=-Math.PI/2+i*(2*Math.PI/n)+th;return{x:g.W/2+Math.cos(a)*g.rx,y:g.H/2+Math.sin(a)*g.ry};
 }
+function layoutOrbit(){
+  const o=$('#orbit');
+  if(o.children.length!==ORDER.length){
+    o.innerHTML=ORDER.map((id,i)=>`<button class="orb" data-id="${id}" style="animation-delay:${-i*.45}s">${icon(id)}<span class="lbl">${APPS[id].n}</span></button>`).join('');
+    ORB.els=$$('.orb',o);
+    ORB.els.forEach(b=>{b.onclick=()=>startWith([b.dataset.id],APPS[b.dataset.id].n);b.onmouseenter=()=>ORB.paused=true;b.onmouseleave=()=>ORB.paused=false});
+  }
+  placeOrbs();placePets();
+}
+function placeOrbs(){const g=orbitGeom();ORB.pos=ORB.els.map((b,i)=>{const p=orbPos(i,ORB.els.length,ORB.theta,g);b.style.left=p.x+'px';b.style.top=p.y+'px';return p})}
+
+/* ---- os dois cachorros ---- */
+const PET_LINES=['Oba! Mais um petisco!','Pega! Pega!','Esse é meu!','Bora brincar?','Au au! 🐾','Achei!','Que divertido!','De novo! De novo!'];
+const ICON_LINES={adestra:'Senta! Fica! 🎯',academia:'Aprendi! 🎓',interakao:'Au au quer dizer oi! 🗣️',reels:'Grava eu! 🎬',aventuras:'Partiu trilha! ⛰️',eventos:'Festa! 🎪',loja:'Petisco na loja? 🛍️',servicos:'Banho não! 🛁',petsurf:'Visitinha! 🏡',saude:'Vacina não! 😅',rotina:'Hora da ração! 🥣',poetia:'Hora da soneca 🌙',dashboard:'Minhas metas! 📊',match:'Amigo novo? 💞',appetv:'Tô na TV! 📺',consulta:'Tô bem, doutor! 🤖',brecho:'Brinquedo novo! 🏷️',carteira:'Mesada! 💳',perfil:'Meu RG! 🪪'};
+const PETS=[
+  {id:'a',img:'img/avatar-a.webp',pose:'img/avatar-a-pata.webp',side:-1,ratio:565/900,hello:'Oi! Clica 3 vezes que eu pulo 🐾'},
+  {id:'b',img:'img/avatar-b.webp',side:1,ratio:576/900,hello:'Au au! Me arrasta pra brincar!'},
+];
+const PSTATE={};let petsBuilt=false;
+function petSize(){return innerWidth<760?100:Math.max(170,Math.min(240,innerHeight*.27))}
+function buildPets(){
+  if(petsBuilt||!$('#pets'))return;petsBuilt=true;
+  PETS.forEach(p=>{if(p.pose)new Image().src=p.pose});
+  $('#pets').innerHTML=PETS.map(p=>`<div class="pet" data-pet="${p.id}" role="img" aria-label="Avatar do cachorro"><div class="pshadow"></div><div class="pbody"><img src="${p.img}" alt="" draggable="false"></div><div class="pbub"></div></div>`).join('');
+  PETS.forEach(p=>{
+    const el=$(`[data-pet="${p.id}"]`);
+    const s=PSTATE[p.id]={p,el,body:$('.pbody',el),img:$('img',el),bub:$('.pbub',el),sh:$('.pshadow',el),x:0,y:0,custom:null,jump:0,jt:0,dur:0,face:p.side>0?-1:1,cool:2+Math.random()*2,tilt:0,wig:0,drag:null,said:false};
+    const bd=s.body;
+    bd.addEventListener('pointerenter',()=>{s.wig=1;if(!s.said){s.said=true;say(s,p.hello)}});
+    bd.addEventListener('pointerdown',e=>{e.preventDefault();s.drag={sx:e.clientX,sy:e.clientY,ox:s.x,oy:s.y,moved:false};bd.setPointerCapture(e.pointerId)});
+    bd.addEventListener('pointermove',e=>{if(!s.drag)return;const dx=e.clientX-s.drag.sx,dy=e.clientY-s.drag.sy;if(!s.drag.moved&&Math.hypot(dx,dy)<6)return;s.drag.moved=true;el.classList.add('dragging');
+      s.custom={x:clamp(s.drag.ox+dx,40,innerWidth-40),y:clamp(s.drag.oy+dy,petSize()*.9,innerHeight-10)};s.x=s.custom.x;s.y=s.custom.y;s.custom.rx=s.x/innerWidth;s.custom.ry=s.y/innerHeight});
+    bd.addEventListener('pointerup',e=>{const d=s.drag;s.drag=null;el.classList.remove('dragging');
+      if(d&&d.moved){hop(s,.55,40);say(s,pick(['Wiii!','Aqui tá bom!','Eba, mudei de lugar!']));return}
+      if(e.detail>=3){hop(s,1,130,true);hearts(s,8);say(s,'Hihi! Mais carinho! 💛');return}
+      hop(s,.7,70);hearts(s,3);const t=nearestOrb(s);if(t)boop(s,t,true);else say(s,pick(PET_LINES))});
+  });
+  placePets();
+}
+function placePets(){
+  if(!petsBuilt)return;const g=orbitGeom(),h=petSize();
+  PETS.forEach(p=>{const s=PSTATE[p.id];s.h=h;
+    const def=g.mob?{x:g.W/2+p.side*g.W*.37,y:g.H-132}:{x:g.W/2+p.side*Math.min(g.rx*.8,560),y:g.H/2+g.ry*.78};
+    const pos=s.custom?{x:s.custom.rx*g.W,y:s.custom.ry*g.H}:def;s.x=clamp(pos.x,40,g.W-40);s.y=clamp(pos.y,h*.9,g.H-10);
+    s.el.style.width=Math.round(h*p.ratio*1.15)+'px';s.el.style.height=h+'px';
+    s.bub.style.setProperty('--ph',(h+6)+'px');s.sh.style.width=Math.round(h*.62)+'px';s.sh.style.height=Math.round(h*.09)+'px';
+  });
+}
+function headPoint(s){return{x:s.x,y:s.y-s.h*.72}}
+function nearestOrb(s,maxd=1e9){let best=null,bd=maxd;const hp=headPoint(s);ORB.pos.forEach((q,i)=>{const d=Math.hypot(q.x-hp.x,q.y-hp.y);if(d<bd){bd=d;best=i}});return best}
+function hop(s,dur=.65,hgt=70,flip=false){s.jt=0;s.dur=dur;s.jh=hgt;s.flip=flip;s.el.classList.add('hopping');if(s.p.pose)s.img.src=s.p.pose}
+function say(s,txt){s.bub.textContent=txt;s.bub.style.marginLeft='0px';s.bub.classList.remove('show');void s.bub.offsetWidth;s.bub.classList.add('show');setTimeout(()=>{s.bub.style.marginLeft='0px';const r=s.bub.getBoundingClientRect();const dx=r.left<8?8-r.left:r.right>innerWidth-8?innerWidth-8-r.right:0;s.bub.style.marginLeft=dx+'px'},330);clearTimeout(s.bt);s.bt=setTimeout(()=>s.bub.classList.remove('show'),2600)}
+function sparks(x,y,n=14){for(let i=0;i<n;i++){const d=document.createElement('i');d.className='spark';const a=Math.random()*Math.PI*2,r=40+Math.random()*70;d.style.left=x+'px';d.style.top=y+'px';d.style.setProperty('--dx',Math.cos(a)*r+'px');d.style.setProperty('--dy',Math.sin(a)*r+'px');d.style.background=pick(['#ffd93d','#ff9fd0','#a7f0d8','#b9a7ff','#fff']);document.body.appendChild(d);setTimeout(()=>d.remove(),900)}}
+function hearts(s,n){const hp=headPoint(s);for(let i=0;i<n;i++){const d=document.createElement('div');d.className='rfly';d.innerHTML=reactSVG(pick(['amei','patinha','brilhou']),28);d.style.left=(hp.x-14+Math.random()*40-20)+'px';d.style.top=(hp.y-10)+'px';d.style.setProperty('--dx',(Math.random()*90-45)+'px');d.style.setProperty('--rot',(Math.random()*50-25)+'deg');d.style.animationDelay=(i*.06)+'s';document.body.appendChild(d);setTimeout(()=>d.remove(),1400)}}
+function boop(s,i,force){
+  const b=ORB.els[i],q=ORB.pos[i];if(!b||!q)return;
+  s.face=q.x<s.x?-1:1;if(!force)hop(s,.62,Math.min(90,Math.max(40,s.y-s.h*.6-q.y)));
+  setTimeout(()=>{b.classList.remove('boop');void b.offsetWidth;b.classList.add('boop');sparks(q.x,q.y);
+    const id=b.dataset.id;say(s,Math.random()<.6&&ICON_LINES[id]?ICON_LINES[id]:pick(PET_LINES))},force?120:300);
+  s.cool=3.2+Math.random()*3;
+}
+function petsTick(dt,t){
+  if(!petsBuilt)return;const g=orbitGeom();
+  PETS.forEach((p,k)=>{const s=PSTATE[p.id];
+    s.cool-=dt;
+    if(!REDUCED&&!s.drag&&s.cool<=0&&s.dur===0){const i=nearestOrb(s,g.mob?260:s.h*1.15);if(i!==null)boop(s,i);else s.cool=.4}
+    let jy=0,rot=0,sq=1;
+    if(s.dur>0){s.jt+=dt;const u=Math.min(1,s.jt/s.dur);jy=-Math.sin(Math.PI*u)*s.jh;sq=u<.12?1-.12*(u/.12):u>.88?1-.1*((1-u)/.12):1+.04*Math.sin(Math.PI*u);rot=(s.flip?360*u:0)+s.face*8*Math.sin(Math.PI*u);
+      if(u>=1){s.dur=0;s.el.classList.remove('hopping');if(s.p.pose)setTimeout(()=>{if(s.dur===0)s.img.src=s.p.img},450)}}
+    if(s.wig>0){s.wig=Math.max(0,s.wig-dt*1.4);rot+=Math.sin(t*28)*5*s.wig}
+    const breath=REDUCED?1:1+.018*Math.sin(t*2.4+k*1.7),sway=REDUCED?0:1.6*Math.sin(t*1.2+k*2);
+    const sx=sq*(1/breath**.5),sy=breath*(2-sq);
+    s.el.style.transform=`translate(${s.x}px,${s.y+jy}px)`;
+    s.body.style.transform=`translate(-50%,-100%) scaleX(${s.face}) rotate(${(rot+sway)*s.face}deg) scale(${sx},${sy})`;
+    s.sh.style.transform=`translate(-50%,-50%) scale(${1+jy/220})`;s.sh.style.opacity=.32+jy/400;
+  });
+}
+/* olham para o mouse */
+addEventListener('pointermove',e=>{if(!petsBuilt||$('#home').classList.contains('leave'))return;PETS.forEach(p=>{const s=PSTATE[p.id];if(s.dur===0&&!s.drag&&Math.abs(e.clientX-s.x)>30&&Math.hypot(e.clientX-s.x,e.clientY-s.y)<420)s.face=e.clientX<s.x?-1:1})});
+function homeTick(ts){
+  if($('#home').classList.contains('leave')){ORB.raf=0;return}
+  const t=ts/1000,dt=Math.min(.05,ORB.last?t-ORB.last:0);ORB.last=t;
+  if(!REDUCED&&!ORB.paused&&!orbitGeom().mob){ORB.theta+=dt*.045;placeOrbs()}
+  petsTick(dt,t);ORB.raf=requestAnimationFrame(homeTick);
+}
+function startHomeAnim(){buildPets();if(!ORB.raf)ORB.raf=requestAnimationFrame(homeTick)}
+
 addEventListener('resize',()=>{if(!$('#home').classList.contains('leave'))layoutOrbit()});
 $('#pform').addEventListener('submit',e=>{e.preventDefault();submitPrompt()});
 function submitPrompt(){
