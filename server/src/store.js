@@ -8,7 +8,7 @@ const FILE = path.join(ROOT, 'data.json');
 export const UPLOADS = path.join(ROOT, 'uploads');
 fs.mkdirSync(UPLOADS, { recursive: true });
 
-const empty = { users: {}, sessions: {}, profiles: {}, stories: [], media: {}, wallets: {}, orders: {}, listings: [], disputes: [], ledger: [] };
+const empty = { users: {}, sessions: {}, profiles: {}, stories: [], media: {}, circles: {}, settings: {}, awards: [], wallets: {}, orders: {}, listings: [], disputes: [], ledger: [] };
 let db = fs.existsSync(FILE) ? { ...structuredClone(empty), ...JSON.parse(fs.readFileSync(FILE, 'utf8')) } : structuredClone(empty);
 const save = () => { fs.writeFileSync(FILE + '.tmp', JSON.stringify(db)); fs.renameSync(FILE + '.tmp', FILE); };
 
@@ -44,6 +44,20 @@ export const store = {
   story: id => db.stories.find(s => s.id === id),
   updateStory(id, patch) { const s = this.story(id); if (s) { Object.assign(s, patch); save(); } return s; },
   dropStory(id) { db.stories = db.stories.filter(s => s.id !== id); save(); },
+
+  /* ---- círculos: amigos próximos e grupos (por dono) ---- */
+  circles(userId) { return (db.circles[userId] ??= { close: [], groups: [] }); },
+  saveCircles() { save(); },
+  /** quem pode ver um post: dono, público, amigos próximos do dono, ou membro de um grupo escolhido */
+  canSee(p, uid) {
+    if (!p || !uid) return false;
+    if (p.userId === uid || p.visibility === 'public') return true;
+    const c = db.circles[p.userId];
+    if (!c) return false;
+    if (p.visibility === 'close') return c.close.includes(uid);
+    if (p.visibility === 'group') return c.groups.some(g => (p.groupIds || []).includes(g.id) && g.members.includes(uid));
+    return false;
+  },
 
   /* ---- créditos, pedidos, brechó ---- */
   wallet(userId) { return (db.wallets[userId] ??= { credits: 0 }); },

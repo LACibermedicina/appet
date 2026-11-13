@@ -16,7 +16,8 @@ const checkPassword = (pw, u) => {
   return h.length === Buffer.from(u.hash).length && crypto.timingSafeEqual(h, Buffer.from(u.hash));
 };
 const cookies = req => Object.fromEntries((req.headers.cookie || '').split(';').map(c => c.trim().split('=')).filter(([k]) => k).map(([k, ...v]) => [k, decodeURIComponent(v.join('='))]));
-const publicUser = u => ({ id: u.id, email: u.email, name: u.name });
+export const isAdmin = u => !!u && String(process.env.ADMIN_EMAILS || '').toLowerCase().split(',').map(x => x.trim()).filter(Boolean).includes(u.email);
+const publicUser = u => ({ id: u.id, email: u.email, name: u.name, isAdmin: isAdmin(u) });
 
 function setSession(req, res, userId) {
   const token = crypto.randomBytes(32).toString('base64url');
@@ -130,7 +131,7 @@ export function authRouter() {
       const s = store.addStory({
         id: newId('sty'), userId: req.user.id, mediaId: m.id,
         text: String(req.body.text || '').slice(0, 140),
-        visibility: req.body.visibility === 'public' ? 'public' : 'private',
+        visibility: req.body.visibility === 'private' ? 'private' : 'public',
         petName: String(p.pet?.name || '').slice(0, 40), petEmoji: String(p.pet?.emoji || '🐶').slice(0, 8),
         createdAt: new Date().toISOString(),
       });
@@ -154,7 +155,7 @@ export function authRouter() {
   r.get('/media/:id', requireAuth, (req, res) => {
     const m = store.media(req.params.id);
     if (!m) return res.sendStatus(404);
-    const ok = m.ownerId === req.user.id || store.get().stories.some(s => s.mediaId === m.id && s.visibility === 'public');
+    const ok = m.ownerId === req.user.id || store.get().stories.some(s => s.mediaId === m.id && store.canSee(s, req.user.id));
     if (!ok) return res.sendStatus(404);
     res.setHeader('Cache-Control', 'private, max-age=3600');
     res.type(m.type).sendFile(path.join(UPLOADS, m.file));

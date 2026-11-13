@@ -47,6 +47,9 @@ Com o servidor rodando, o app passa a usar a IA de verdade pela rota `/api/ai/ra
 - PetMatch (amizade ou algo mais, com regras de cruzamento responsável)
 - Contas de usuário: cada pessoa só vê os próprios dados privados
 - Comunidade: stories e reels (foto ou vídeo até 60 MB) compartilhados, com busca e reações em estilo cartoon 3D (Amei, Haha, Uau, Que fofo, Patinha, Brilhou)
+- Público de cada post: 🌎 Comunidade (padrão), ⭐ Amigos próximos, 👥 Grupos criados pelo usuário ou 🔒 Só eu
+- Reações com 3 cliques na foto/vídeo ou pelo botão que aparece ao passar o mouse
+- Ranking de reações por rodada (7 dias por padrão) com medalhas 🥇🥈🥉 automáticas; administradores (variável `ADMIN_EMAILS`) mudam a duração ou encerram a rodada
 
 ## O que ainda falta ligar para produção
 - **Pagamentos no app:** a função `checkout()` do `index.html` ainda simula. Troque o clique "Pagar" por `POST /api/pay/link` e abra a `url` retornada.

@@ -10,7 +10,7 @@ const PORT = 4600 + Math.floor(Math.random() * 300);
 const BASE = `http://127.0.0.1:${PORT}`;
 fs.rmSync(path.join(ROOT, 'data.json'), { force: true });
 
-const srv = spawn(process.execPath, ['src/server.js'], { cwd: ROOT, env: { ...process.env, PORT: String(PORT), HOST: '127.0.0.1', AI_ORDER: 'none' }, stdio: 'inherit' });
+const srv = spawn(process.execPath, ['src/server.js'], { cwd: ROOT, env: { ...process.env, PORT: String(PORT), HOST: '127.0.0.1', AI_ORDER: 'none', ADMIN_EMAILS: 'ana@teste.com' }, stdio: 'inherit' });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let falhas = 0;
 const ok = (cond, msg) => { console.log(`${cond ? '✔' : '✘'} ${msg}`); if (!cond) falhas++; };
@@ -90,6 +90,59 @@ try {
   ok((await B('POST', `/api/posts/${reelPriv.id}/react`, { emoji: 'amei' })).status === 404, 'não dá para reagir a post privado de outra pessoa');
   ok((await B('DELETE', `/api/me/posts/${reelPub.id}`)).status === 404, 'Beto não apaga o reel da Ana');
   ok((await A('PATCH', `/api/me/posts/${reelPub.id}`, { visibility: 'private' })).status === 200 && !(await B('GET', '/api/feed?kind=reel')).data.posts.length, 'Ana deixa de compartilhar e o reel some da comunidade');
+
+  // ---- públicos: amigos próximos e grupos ----
+  const C = cliente();
+  await C('POST', '/api/auth/register', { name: 'Caio', email: 'caio@teste.com', password: 'senha-forte-3' });
+  const idB = (await B('GET', '/api/auth/me')).data.user.id, idC = (await C('GET', '/api/auth/me')).data.user.id;
+  const busca = (await A('GET', '/api/users/search?q=beto')).data.users;
+  ok(busca.length === 1 && busca[0].id === idB && !('email' in busca[0]), 'busca de tutores acha o Beto sem expor o e-mail');
+  ok((await A('GET', '/api/users/search?q=caio@teste.com')).data.users[0]?.id === idC, 'busca por e-mail exato funciona');
+  ok((await A('PUT', '/api/me/close', { members: [idB, 'usr_inexistente'] })).data.close.length === 1, 'Ana põe o Beto nos amigos próximos (id inválido ignorado)');
+  const fam = (await A('POST', '/api/me/groups', { name: 'Família', members: [idC] })).data.groups[0];
+  ok(fam?.name === 'Família' && fam.members[0].id === idC, 'Ana cria o grupo Família com o Caio');
+  const pClose = (await A('POST', '/api/me/posts?kind=reel&visibility=close&text=amigos', VIDEO, 'video/mp4')).data.post;
+  const pFam = (await A('POST', `/api/me/posts?kind=reel&visibility=group&groups=${fam.id}&text=familia`, VIDEO, 'video/mp4')).data.post;
+  const pPub = (await A('POST', '/api/me/posts?kind=story&text=todos', JPG, 'image/jpeg')).data.post;
+  ok(pPub.visibility === 'public', 'sem escolher nada, o post é público');
+  ok((await A('POST', '/api/me/posts?kind=reel&visibility=group&groups=grp_de_outro', VIDEO, 'video/mp4')).status === 400, 'não dá para usar grupo de outra pessoa');
+  const vB = (await B('GET', '/api/feed?kind=reel')).data.posts.map(p => p.id), vC = (await C('GET', '/api/feed?kind=reel')).data.posts.map(p => p.id);
+  ok(vB.includes(pClose.id) && !vB.includes(pFam.id), 'Beto (amigo próximo) vê o post de amigos próximos e não o da Família');
+  ok(vC.includes(pFam.id) && !vC.includes(pClose.id), 'Caio (Família) vê o post do grupo e não o de amigos próximos');
+  ok((await C('GET', '/api/feed?kind=reel')).data.posts.find(p => p.id === pFam.id).audience.groups[0]?.name === 'Família', 'Caio vê que o post foi para o grupo Família');
+  ok((await C('GET', pClose.url)).status === 404 && (await B('GET', pClose.url)).status === 200, 'arquivo de amigos próximos só abre para amigos próximos');
+  ok((await C('POST', `/api/posts/${pClose.id}/react`, { emoji: 'amei' })).status === 404 && (await B('POST', `/api/posts/${pClose.id}/react`, { emoji: 'amei' })).status === 200, 'só quem pode ver consegue reagir');
+  await A('PATCH', `/api/me/groups/${fam.id}`, { members: [] });
+  ok(!(await C('GET', '/api/feed?kind=reel')).data.posts.some(p => p.id === pFam.id) && (await C('GET', pFam.url)).status === 404, 'Caio removido do grupo perde o acesso na hora');
+  await A('PUT', '/api/me/close', { members: [] });
+  ok((await B('GET', pClose.url)).status === 404, 'Beto removido dos amigos próximos perde o acesso');
+  ok((await A('PATCH', `/api/me/posts/${pFam.id}`, { visibility: 'public' })).data.post.visibility === 'public' && (await C('GET', pFam.url)).status === 200, 'Ana muda o post para público e todos veem');
+  await A('POST', '/api/me/groups', { name: 'Parque', members: [idB] });
+  const parque = (await A('GET', '/api/me/circles')).data.groups.find(g => g.name === 'Parque');
+  const pParque = (await A('POST', `/api/me/posts?kind=reel&visibility=group&groups=${parque.id}&text=parque`, VIDEO, 'video/mp4')).data.post;
+  await A('DELETE', `/api/me/groups/${parque.id}`);
+  ok((await B('GET', pParque.url)).status === 404 && (await A('GET', '/api/me/posts?kind=reel')).data.posts.find(p => p.id === pParque.id).visibility === 'private', 'apagar o grupo deixa os posts dele só com a dona');
+  ok((await C('GET', '/api/me/circles')).data.close.length === 0, 'cada um só vê os próprios círculos');
+
+  // ---- ranking de reações e medalhas ----
+  const reelB = (await B('POST', '/api/me/posts?kind=reel&text=' + encodeURIComponent('Bob campeão'), VIDEO, 'video/mp4')).data.post;
+  await A('POST', `/api/posts/${reelB.id}/react`, { emoji: 'amei' });
+  await C('POST', `/api/posts/${reelB.id}/react`, { emoji: 'brilhou' });
+  await B('POST', `/api/posts/${pPub.id}/react`, { emoji: 'fofo' });
+  const rk = (await C('GET', '/api/ranking')).data;
+  ok(rk.top[0]?.id === reelB.id && rk.top[0].periodTotal === 2 && rk.top[1]?.id === pPub.id, 'ranking ordena pelo total de reações do período');
+  ok(rk.period.days === 7 && rk.period.end - rk.period.start === 7 * 864e5, 'período padrão de 7 dias');
+  ok(!rk.top.some(p => p.id === pClose.id), 'posts que não são públicos não entram no ranking');
+  ok((await C('PUT', '/api/admin/ranking', { closeNow: true })).status === 403, 'quem não é administrador não mexe no ranking');
+  ok((await A('GET', '/api/auth/me')).data.user.isAdmin === true && (await B('GET', '/api/auth/me')).data.user.isAdmin === false, 'Ana é administradora pelo ADMIN_EMAILS');
+  ok((await A('PUT', '/api/admin/ranking', { days: 0 })).status === 400, 'período inválido é recusado');
+  ok((await A('PUT', '/api/admin/ranking', { closeNow: true, days: 14 })).data.period.days === 14, 'administradora encerra a rodada e muda para 14 dias');
+  const rk2 = (await B('GET', '/api/ranking')).data;
+  ok(rk2.winners[0]?.posts[0]?.post?.id === reelB.id && rk2.winners[0].posts[0].place === 1, 'o reel mais reagido ganha a medalha de 1º lugar');
+  ok(rk2.winners[0].posts[1]?.place === 2, 'o 2º lugar também é premiado');
+  ok(rk2.myBadges.some(b => b.place === 1 && b.postId === reelB.id), 'a medalha aparece no perfil do Beto');
+  ok((await A('GET', '/api/feed?kind=reel')).data.posts.find(p => p.id === reelB.id).badges[0]?.place === 1, 'o post premiado mostra o selo para todos');
+  ok(rk2.top.length === 0, 'nova rodada começa zerada');
 
   ok((await A('GET', '/')).status === 200, 'o app (index.html) continua sendo servido');
 } catch (e) {

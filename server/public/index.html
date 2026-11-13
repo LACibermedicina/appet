@@ -500,6 +500,28 @@ canvas.wave{width:100%;height:90px;display:block;border-radius:14px;background:#
 @keyframes rfly{0%{transform:translate(0,0) scale(.4);opacity:0}15%{opacity:1}100%{transform:translate(var(--dx),-150px) scale(1.5) rotate(var(--rot));opacity:0}}
 .viewer .vreact{position:absolute;left:16px;bottom:70px;z-index:3;font-size:13px}
 
+
+/* ---- públicos: amigos próximos e grupos ---- */
+.story.closef .rg{background:conic-gradient(#2ed8a3,#00b894,#55efc4,#2ed8a3)}
+.reel .rtag.rclose{background:#2ed8a3;color:#fff}
+.pick.aud button{font-size:13px}
+.audgroups{display:flex;flex-direction:column;gap:6px;margin:4px 0 8px}
+.audg{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:#faf8ff;cursor:pointer;font-weight:600;font-size:13px}
+.audg small{margin-left:auto;color:var(--ink3);font-weight:600}
+
+
+/* ---- reações por hover/3 cliques, ranking e medalhas ---- */
+.reel{user-select:none;-webkit-user-select:none}
+@media (hover:hover){.reel .rbtn:not(.on){opacity:0;transform:scale(.85);transition:opacity .2s,transform .25s cubic-bezier(.3,1.8,.5,1)}.reel:hover .rbtn{opacity:1;transform:none}}
+.reel .rtag.rbadge{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#fff6b8,#ffcf33);color:#6b4500}
+.rkhead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.rkrow{gap:12px}.rkpos{width:34px;display:grid;place-items:center;font-size:15px}
+.rkth{width:52px;height:52px;border-radius:12px;background:#120c26 center/cover no-repeat;display:grid;place-items:center;font-size:26px;object-fit:cover;flex:none}
+.rkcounts{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;font-size:12px;font-weight:700;color:var(--ink2)}.rkcounts span{display:inline-flex;align-items:center;gap:2px}
+.rktot{text-align:center;font-size:22px;font-weight:800;line-height:1}.rktot small{display:block;font-size:10px;color:var(--ink3);font-weight:700}
+.rkadmin{margin-top:14px;background:#faf8ff}
+.badge small{font-size:10px}
+
 /* foto de fundo + identificação */
 #photoBg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .8s}
 #photoBg.on{opacity:1}
@@ -992,7 +1014,7 @@ $('#mbPet').onclick=()=>openApp('dashboard');
 /* menus */
 const MENUS={
  appet:[[()=>SERVER?(ME?`Sair da conta (${ME.email})`:'Entrar na conta'):'Apagar meus dados deste aparelho',accountAction],'-',['Sobre o APPET',()=>notify('APPET','Protótipo interativo: dados e IA são simulados nesta versão.','dashboard',5000)],['Ficha do pet (foto, chip)…',()=>openApp('perfil')],['Refazer perfil guiado…',()=>{pendingPrompt={ids:[],text:''};openOnboarding([], '');}],'-',['Voltar à tela inicial',()=>location.reload()],['Reiniciar demonstração',()=>{try{localStorage.removeItem('appet-profile')}catch(e){};location.reload()}]],
- arquivo:[['Nova busca…',openSpot,'⌘K'],['Novo story',()=>openApp('reels')],['Registrar treino',()=>openApp('adestra')]],
+ arquivo:[['Nova busca…',openSpot,'⌘K'],['Amigos próximos e grupos…',()=>openCircles()],['Novo story',()=>openApp('reels')],['Registrar treino',()=>openApp('adestra')]],
  janela:[['Minimizar todas',()=>Object.values(wins).forEach(w=>w.style.display='none')],['Fechar todas',()=>Object.keys(wins).forEach(closeApp)],'-',...ORDER.map(id=>[APPS[id].e+'  '+APPS[id].n,()=>openApp(id)])],
  ajuda:[['Como funciona o InterAKão',()=>openApp('interakao')],['Atalhos: ⌘K busca, duplo clique amplia janela',()=>{}]]
 };
@@ -1134,7 +1156,7 @@ R.dashboard=()=>{
       <div style="font-size:13px;opacity:.85;font-weight:600">${S.tutor?S.tutor+' & ':''}${S.pet.name}</div>
       <div style="font-size:22px;font-weight:800;letter-spacing:-.02em">${lvlName()} · Nv ${lvl()}</div>
       <div class="xp"><i style="width:${xpIn/2}%"></i></div><div style="font-size:12px;opacity:.85;margin-top:4px">${xpIn}/200 XP para o próximo nível · 🔥 ${S.streak} dias seguidos</div>
-      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">${hasChip()?`<span class="pill" style="background:rgba(255,255,255,.25);color:#fff">🔖 Chip ${chipShort(S.chip.num)}</span>`:`<span class="pill" data-open="perfil" style="background:#fff;color:#8b5cf6;cursor:pointer">＋ Registrar microchip</span>`}${S.chip.rg?`<span class="pill" style="background:rgba(255,255,255,.25);color:#fff">🪪 RG Animal</span>`:''}${S.lost?'<span class="pill" style="background:#fff;color:#d62246">🚨 Pet perdido: alerta ativo</span>':''}</div></div></div></div>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">${hasChip()?`<span class="pill" style="background:rgba(255,255,255,.25);color:#fff">🔖 Chip ${chipShort(S.chip.num)}</span>`:`<span class="pill" data-open="perfil" style="background:#fff;color:#8b5cf6;cursor:pointer">＋ Registrar microchip</span>`}${S.chip.rg?`<span class="pill" style="background:rgba(255,255,255,.25);color:#fff">🪪 RG Animal</span>`:''}${S.lost?'<span class="pill" style="background:#fff;color:#d62246">🚨 Pet perdido: alerta ativo</span>':''}${(S.badges||[]).length?`<span class="pill" data-open="reels" style="background:#fff;color:#a46a00;cursor:pointer">🏆 ${S.badges.length} medalha${S.badges.length>1?'s':''}</span>`:''}</div></div></div></div>
    <div class="card" style="margin-bottom:12px"><div class="between"><h4>🎯 Seus objetivos</h4><span class="mut">${S.time} min/dia disponíveis</span></div>
      <div class="rings">${S.goals.map((g,i)=>ring(goalProgress(g),GCOL[i%GCOL.length],g)).join('')||'<span class="mut">Defina objetivos no perfil</span>'}</div></div>
    <div class="grid">
@@ -1353,15 +1375,15 @@ function reactBar(p){
 }
 let POSTS={};
 function closePicker(){$$('.rpicker.fixed').forEach(p=>p.remove());$$('.rbar.open').forEach(o=>o.classList.remove('open'))}
-function openPicker(bar,btn){
+function openPicker(bar,btn,pt){
   const was=bar.classList.contains('open');closePicker();if(was)return;
   const id=bar.dataset.post,p=POSTS[id];if(!p)return;bar.classList.add('open');
   const pk=document.createElement('div');pk.className='rpicker fixed';
   pk.innerHTML=REACTS.map(r=>`<button data-react="${r.id}" class="${p.myReaction===r.id?'on':''}" title="${r.n}">${reactSVG(r.id,42)}<small>${r.n}</small></button>`).join('');
   document.body.appendChild(pk);pickerAt=Date.now();
-  const r=btn.getBoundingClientRect(),w=pk.offsetWidth,h=pk.offsetHeight;
-  pk.style.left=clamp(r.left-6,8,innerWidth-w-8)+'px';
-  pk.style.top=(r.top-h-10<8?r.bottom+10:r.top-h-10)+'px';
+  const w=pk.offsetWidth,h=pk.offsetHeight;
+  if(pt){pk.style.left=clamp(pt.x-w/2,8,innerWidth-w-8)+'px';pk.style.top=clamp(pt.y-h-14,8,innerHeight-h-8)+'px'}
+  else{const r=btn.getBoundingClientRect();pk.style.left=clamp(r.left-6,8,innerWidth-w-8)+'px';pk.style.top=(r.top-h-10<8?r.bottom+10:r.top-h-10)+'px'}
   pk.onclick=e=>e.stopPropagation();
   $$('[data-react]',pk).forEach(x=>x.onclick=e=>{e.stopPropagation();closePicker();react(id,x.dataset.react,btn.isConnected?btn:x)});
 }
@@ -1384,6 +1406,153 @@ async function react(id,emo,el){
   if(SERVER&&ME&&!p.demo&&!p.local){try{const d=await api(`/posts/${id}/react`,{method:'POST',body:{emoji:next}});p.reactions=d.reactions;p.myReaction=d.myReaction;refreshReactUI(id)}catch(e){notify('Não deu para reagir',e.message,'reels',3000)}}
 }
 
+/* ---- PÚBLICO dos posts: comunidade (padrão), amigos próximos, grupos, só eu ---- */
+const AUD={public:{e:'🌎',n:'Comunidade',h:'Todos os tutores do APPET podem ver e reagir.'},close:{e:'⭐',n:'Amigos próximos',h:'Só quem está na sua lista de amigos próximos.'},group:{e:'👥',n:'Grupos',h:'Só os membros dos grupos que você escolher.'},private:{e:'🔒',n:'Só eu',h:'Fica só na sua conta. Ninguém mais vê.'}};
+let CIRCLES={close:[],groups:[]};
+const DEMO_USERS=[{id:'d1',name:'Bia',petName:'Luna',petEmoji:'🐩'},{id:'d2',name:'Léo',petName:'Bento',petEmoji:'🦮'},{id:'d3',name:'Marina',petName:'Mel',petEmoji:'🐶'},{id:'d4',name:'Rafa',petName:'Paçoca',petEmoji:'🐕'},{id:'d5',name:'Júlia',petName:'Nina',petEmoji:'🐱'}];
+const UCACHE={};DEMO_USERS.forEach(u=>UCACHE[u.id]=u);
+function audLabel(p){
+  const v=p.visibility||'public';
+  if(v==='group'){const gs=(p.audience&&p.audience.groups)||[];return '👥 '+(gs.map(g=>esc(g.name)).join(', ')||'Grupo')}
+  return `${AUD[v].e} ${v==='public'?'comunidade':AUD[v].n.toLowerCase()}`;
+}
+async function loadCircles(){if(SERVER&&ME){try{CIRCLES=await api('/me/circles');[...CIRCLES.close,...CIRCLES.groups.flatMap(g=>g.members)].forEach(u=>UCACHE[u.id]=u)}catch(e){}}}
+/* seletor reutilizável: st={vis,groups:Set} */
+function audHTML(st){
+  return `<div class="f" style="margin-bottom:6px"><label>Quem pode ver?</label><div class="pick aud">${Object.entries(AUD).map(([k,a])=>`<button type="button" data-aud="${k}" class="${st.vis===k?'on':''}">${a.e} ${a.n}</button>`).join('')}</div></div>
+   ${st.vis==='group'?(CIRCLES.groups.length?`<div class="audgroups">${CIRCLES.groups.map(g=>`<label class="audg"><input type="checkbox" data-g="${g.id}" ${st.groups.has(g.id)?'checked':''}> 👥 ${esc(g.name)} <small>${g.members.length} pessoa${g.members.length===1?'':'s'}</small></label>`).join('')}</div>`:`<div class="respons" style="background:#f3eeff;color:var(--ink2)">Você ainda não tem grupos.</div>`):''}
+   <p class="mut" style="font-size:13px">${AUD[st.vis].h}${st.vis==='close'?` ${CIRCLES.close.length?`(${CIRCLES.close.length} na lista)`:'<b>Sua lista está vazia.</b>'}`:''} <a href="#" data-circ style="color:var(--violet);font-weight:700">Gerenciar amigos e grupos</a></p>`;
+}
+function bindAud(box,st){
+  const draw=()=>{box.innerHTML=audHTML(st);
+    $$('[data-aud]',box).forEach(b=>b.onclick=()=>{st.vis=b.dataset.aud;draw()});
+    $$('[data-g]',box).forEach(c=>c.onchange=()=>{c.checked?st.groups.add(c.dataset.g):st.groups.delete(c.dataset.g)});
+    $('[data-circ]',box).onclick=e=>{e.preventDefault();openCircles(()=>draw())};
+  };draw();
+}
+function audValid(st){
+  if(st.vis==='group'&&!st.groups.size){notify('Escolha um grupo','Marque pelo menos um grupo ou crie um em “Gerenciar amigos e grupos”.','reels',4000);return false}
+  return true;
+}
+function localAudience(st){return st.vis==='group'?{type:'group',groups:CIRCLES.groups.filter(g=>st.groups.has(g.id)).map(g=>({id:g.id,name:g.name}))}:{type:st.vis,groups:[]}}
+/* trocar o público de um post já publicado */
+function openAudienceModal(p){
+  const st={vis:p.visibility||'public',groups:new Set(p.visibility==='group'?((p.audience&&p.audience.groups)||[]).map(g=>g.id):[])};
+  const w=document.createElement('div');w.className='modalwrap';document.body.appendChild(w);
+  w.innerHTML=`<div class="modal" style="width:min(460px,100%)"><h2>Quem vê este post?</h2><p class="m">${esc(p.text||'Sem legenda')}</p><div class="audbox"></div><div class="mact"><button class="btn g" id="auC">Cancelar</button><button class="btn p" id="auS">Salvar</button></div></div>`;
+  bindAud($('.audbox',w),st);
+  $('#auC',w).onclick=()=>w.remove();
+  $('#auS',w).onclick=async()=>{if(!audValid(st))return;
+    try{
+      if(SERVER&&ME&&!p.local){const d=await api(`/me/posts/${p.id}`,{method:'PATCH',body:{visibility:st.vis,groups:[...st.groups]}});Object.assign(p,d.post);await loadCommunity()}
+      else{p.visibility=st.vis;p.audience=localAudience(st);COMM.reels=MYREELS.filter(r=>r.visibility!=='private');idxPosts()}
+      if(p.vis!==undefined){p.vis=p.visibility}
+      w.remove();rerender('reels');notify('Público atualizado',`${AUD[st.vis].e} ${AUD[st.vis].n}`,'reels',2500);
+    }catch(e){notify('Não foi possível salvar',e.message,'reels',4000)}
+  };
+}
+/* gerenciar amigos próximos e grupos */
+async function circOp(kind,arg){
+  if(SERVER&&ME){let d;
+    if(kind==='close')d=await api('/me/close',{method:'PUT',body:{members:arg}});
+    else if(kind==='create')d=await api('/me/groups',{method:'POST',body:arg});
+    else if(kind==='update')d=await api('/me/groups/'+arg.id,{method:'PATCH',body:arg});
+    else d=await api('/me/groups/'+arg,{method:'DELETE'});
+    CIRCLES=d;[...CIRCLES.close,...CIRCLES.groups.flatMap(g=>g.members)].forEach(u=>UCACHE[u.id]=u);return}
+  const card=id=>UCACHE[id];
+  if(kind==='close')CIRCLES.close=arg.map(card).filter(Boolean);
+  else if(kind==='create')CIRCLES.groups.push({id:'g'+Date.now(),name:arg.name,members:(arg.members||[]).map(card).filter(Boolean)});
+  else if(kind==='update'){const g=CIRCLES.groups.find(x=>x.id===arg.id);if(arg.name)g.name=arg.name;if(arg.members)g.members=arg.members.map(card).filter(Boolean)}
+  else CIRCLES.groups=CIRCLES.groups.filter(g=>g.id!==arg);
+}
+async function searchUsers(q){
+  if(SERVER&&ME){const d=await api('/users/search?q='+encodeURIComponent(q));d.users.forEach(u=>UCACHE[u.id]=u);return d.users}
+  const n=norm(q);return DEMO_USERS.filter(u=>norm(u.name+' '+u.petName).includes(n));
+}
+function openCircles(onClose){
+  let tab='close',gsel=CIRCLES.groups[0]?.id||null,results=[],q='';
+  const w=document.createElement('div');w.className='modalwrap';document.body.appendChild(w);
+  const ucard=(u,btn)=>`<div class="li" style="padding:8px 2px"><div class="av2" style="background:#f3eeff">${u.petEmoji||'🐶'}</div><div class="grow"><b>${esc(u.name)}</b><div class="mut">${u.petName?'tutor(a) de '+esc(u.petName):''}</div></div>${btn}</div>`;
+  const draw=()=>{
+    const g=CIRCLES.groups.find(x=>x.id===gsel);
+    const ids=tab==='close'?CIRCLES.close.map(u=>u.id):(g?g.members.map(u=>u.id):[]);
+    w.innerHTML=`<div class="modal" style="width:min(560px,100%)"><div class="between"><h2>Amigos e grupos</h2><button class="btn g sm" id="ciX">✕</button></div>
+      <p class="m">Escolha quem vê os posts que você não quiser deixar abertos para toda a comunidade.</p>
+      <div class="tabs"><button data-ct="close" class="${tab==='close'?'on':''}">⭐ Amigos próximos (${CIRCLES.close.length})</button><button data-ct="groups" class="${tab==='groups'?'on':''}">👥 Grupos (${CIRCLES.groups.length})</button></div>
+      ${tab==='groups'?`<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">${CIRCLES.groups.map(x=>`<button class="chip" data-gs="${x.id}" style="${x.id===gsel?'background:var(--violet);color:#fff':''}">👥 ${esc(x.name)} · ${x.members.length}</button>`).join('')}
+        <form id="gNew" class="row" style="gap:6px"><input id="gName" placeholder="Novo grupo: Família, Parque…" maxlength="40" style="border:1px solid var(--line);border-radius:10px;padding:7px 10px;width:200px"><button class="btn p sm">＋ Criar</button></form></div>
+        ${g?`<div class="between" style="margin-bottom:6px"><b>👥 ${esc(g.name)}</b><div class="row" style="gap:6px"><button class="btn s sm" id="gRen">Renomear</button><button class="btn s sm" id="gDel">Apagar grupo</button></div></div>`:'<div class="mut" style="margin-bottom:8px">Crie um grupo para começar.</div>'}`:''}
+      ${tab==='close'||g?`<div class="card" style="padding:10px 12px;margin-bottom:10px"><b style="font-size:13px">${tab==='close'?'Na sua lista de amigos próximos':'Membros'}</b>
+        <div class="list">${(tab==='close'?CIRCLES.close:g.members).map(u=>ucard(u,`<button class="btn s sm" data-rm="${u.id}">Remover</button>`)).join('')||'<div class="mut" style="padding:8px 0">Ninguém ainda.</div>'}</div></div>
+       <input id="ciQ" value="${esc(q)}" placeholder="🔍 Buscar tutor pelo nome, nome do pet ou e-mail" style="width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#faf9ff;outline:0">
+       <div class="list" style="margin-top:6px">${results.map(u=>ucard(u,ids.includes(u.id)?'<span class="pill ok">Adicionado</span>':`<button class="btn p sm" data-add="${u.id}">＋ Adicionar</button>`)).join('')||(q.length>=2?'<div class="mut" style="padding:8px 2px">Ninguém encontrado.</div>':'')}</div>`:''}
+      ${!SERVER?'<p class="mut" style="font-size:12px;margin-top:10px">Prévia: tutores de exemplo. No app em appet.m3d.pro aparecem os usuários reais.</p>':''}</div>`;
+    $('#ciX',w).onclick=()=>{w.remove();onClose&&onClose();if(wins.reels)rerender('reels')};
+    $$('[data-ct]',w).forEach(b=>b.onclick=()=>{tab=b.dataset.ct;draw()});
+    $$('[data-gs]',w).forEach(b=>b.onclick=()=>{gsel=b.dataset.gs;draw()});
+    const gf=$('#gNew',w);if(gf)gf.onsubmit=async e=>{e.preventDefault();const n=$('#gName',w).value.trim();if(!n)return;try{await circOp('create',{name:n,members:[]});gsel=CIRCLES.groups.at(-1).id;draw()}catch(err){notify('Erro',err.message,'reels',3500)}};
+    const gr=$('#gRen',w);if(gr)gr.onclick=async()=>{const t=document.createElement('input');t.value=g.name;t.maxLength=40;t.style.cssText='border:1px solid var(--violet);border-radius:10px;padding:6px 9px';gr.replaceWith(t);t.focus();t.onkeydown=async e=>{if(e.key==='Enter'&&t.value.trim()){await circOp('update',{id:g.id,name:t.value.trim()});draw()}if(e.key==='Escape')draw()}};
+    const gd=$('#gDel',w);if(gd)gd.onclick=async()=>{if(gd.dataset.ok){await circOp('delete',g.id);gsel=CIRCLES.groups[0]?.id||null;await loadCommunity();draw()}else{gd.dataset.ok=1;gd.textContent='Confirmar? Posts do grupo ficam só com você'}};
+    const setIds=async list=>{try{if(tab==='close')await circOp('close',list);else await circOp('update',{id:g.id,members:list});draw()}catch(err){notify('Erro',err.message,'reels',3500)}};
+    $$('[data-rm]',w).forEach(b=>b.onclick=()=>setIds(ids.filter(i=>i!==b.dataset.rm)));
+    $$('[data-add]',w).forEach(b=>b.onclick=()=>setIds([...ids,b.dataset.add]));
+    const qi=$('#ciQ',w);if(qi){let t;qi.oninput=()=>{clearTimeout(t);t=setTimeout(async()=>{q=qi.value.trim();results=q.length>=2?await searchUsers(q).catch(()=>[]):[];draw();const n=$('#ciQ',w);if(n){n.focus();n.setSelectionRange(n.value.length,n.value.length)}},350)}}
+  };
+  draw();
+}
+
+/* ---- RANKING de reações e medalhas ---- */
+let RANK=null;const RLOCAL={days:7,start:Date.now(),awards:[]};
+const PLACE=[null,{n:'Pet da Semana',c:['#fff6b8','#ffcf33','#d99500']},{n:'2º lugar',c:['#ffffff','#d9dee8','#9aa3b5']},{n:'3º lugar',c:['#ffe2c4','#e59a5c','#a85a24']}];
+function medalSVG(place,s=26){
+  const k='m'+(++rsvgN),c=(PLACE[place]||PLACE[1]).c;
+  return `<svg class="rsvg" width="${s}" height="${s}" viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="${k}" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="${c[0]}"/><stop offset=".55" stop-color="${c[1]}"/><stop offset="1" stop-color="${c[2]}"/></radialGradient></defs>
+   <path d="M18 2 L28 2 L34 24 L24 26Z" fill="#6c5ce7"/><path d="M46 2 L36 2 L30 24 L40 26Z" fill="#ff6fa8"/>
+   <ellipse cx="32" cy="61" rx="15" ry="2.4" fill="#1d1b3a" opacity=".16"/><circle cx="32" cy="40" r="19" fill="url(#${k})" stroke="${c[2]}" stroke-width="1.5"/>
+   <circle cx="32" cy="40" r="13.5" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2" stroke-dasharray="3 3"/>
+   <text x="32" y="47" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="19" fill="${c[2]}">${place}</text>
+   <ellipse cx="25" cy="30" rx="6" ry="3.5" fill="#fff" opacity=".6" transform="rotate(-30 25 30)"/></svg>`;
+}
+const badgeTag=p=>(p.badges&&p.badges.length)?`<span class="rtag rbadge">${medalSVG(Math.min(...p.badges.map(b=>b.place)),16)} ${PLACE[Math.min(...p.badges.map(b=>b.place))].n}</span>`:'';
+const rtotal=p=>Object.values(p.reactions||{}).reduce((a,b)=>a+b,0);
+async function loadRanking(){
+  if(SERVER&&ME){try{RANK=await api('/ranking');S.badges=RANK.myBadges||[]}catch(e){}return}
+  const pool=[...COMM.reels,...DEMOREELS];
+  RANK={period:{start:RLOCAL.start,end:RLOCAL.start+RLOCAL.days*DAY,days:RLOCAL.days},isAdmin:true,
+    top:pool.map(p=>({...p,periodCounts:p.reactions,periodTotal:rtotal(p)})).filter(p=>p.periodTotal>0).sort((a,b)=>b.periodTotal-a.periodTotal).slice(0,10),
+    winners:RLOCAL.awards,myBadges:[]};
+}
+const fmtLeft=ms=>{ms=Math.max(0,ms);const d=Math.floor(ms/DAY),h=Math.floor(ms%DAY/36e5),m=Math.floor(ms%36e5/6e4);return d?`${d}d ${h}h`:h?`${h}h ${m}min`:`${m}min`};
+function rankingHTML(){
+  if(!RANK)return '<div class="empty"><div class="spin"></div>Carregando ranking…</div>';
+  const per=RANK.period,lbl=per.days===7?'da semana':`dos últimos ${per.days} dias`;
+  const thumb=p=>p.demo?`<div class="rkth" style="background:${p.g}">${p.emoji}</div>`:p.mediaType==='video'?`<video class="rkth" src="${p.url}" muted playsinline preload="metadata"></video>`:`<div class="rkth" style="background-image:url(${p.url})"></div>`;
+  return `<div class="rkhead"><div><div class="h">🏆 Ranking ${lbl}</div><div class="mut">As 3 postagens com mais reações ganham medalha quando a rodada termina. Termina em <b>${fmtLeft(per.end-Date.now())}</b>.</div></div>
+     <div class="row" style="gap:4px">${[1,2,3].map(i=>medalSVG(i,34)).join('')}</div></div>
+   ${RANK.top.length?`<div class="card list" style="padding:6px 14px">${RANK.top.map((p,i)=>`<div class="li rkrow"><div class="rkpos">${i<3?medalSVG(i+1,30):`<b>${i+1}º</b>`}</div>${thumb(p)}<div class="grow"><b>${esc(p.petName||'Pet')} ${p.petEmoji||''}</b>${p.demo?' <span class="pill" style="background:#f1eef9;color:var(--ink3)">exemplo</span>':''}<div class="mut" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px">${esc(p.text||'')}</div>
+       <div class="rkcounts">${REACTS.filter(r=>(p.periodCounts||{})[r.id]>0).map(r=>`<span>${reactSVG(r.id,18)}${p.periodCounts[r.id]}</span>`).join('')}</div></div><div class="rktot">${p.periodTotal}<small>reações</small></div></div>`).join('')}</div>`
+     :'<div class="empty">Ninguém recebeu reações nesta rodada ainda. Poste um reel e chame a comunidade!</div>'}
+   ${RANK.myBadges&&RANK.myBadges.length?`<div class="sec">🎖️ Suas medalhas</div><div class="row" style="flex-wrap:wrap;gap:10px">${RANK.myBadges.map(b=>`<div class="badge">${medalSVG(b.place,54)}${PLACE[b.place].n}<small class="mut">${fmtD(new Date(b.end).toISOString().slice(0,10))}</small></div>`).join('')}</div>`:''}
+   ${RANK.winners&&RANK.winners.length?`<div class="sec">🏅 Vencedores das rodadas anteriores</div>${RANK.winners.map(w=>`<div class="card" style="margin-bottom:8px"><div class="mut" style="font-weight:700;margin-bottom:6px">${fmtD(new Date(w.start).toISOString().slice(0,10))} – ${fmtD(new Date(w.end).toISOString().slice(0,10))}</div>${w.posts.map(x=>`<div class="li" style="padding:6px 0">${medalSVG(x.place,28)}<div class="grow"><b>${x.post?esc(x.post.petName||'Pet')+' '+(x.post.petEmoji||''):'Post removido ou privado'}</b> <span class="mut">${x.post?esc(x.post.text||''):''}</span></div><span class="pill v">${x.total} reações</span></div>`).join('')}</div>`).join('')}`:''}
+   ${RANK.isAdmin?`<div class="card rkadmin"><b>⚙️ Administração do ranking</b><div class="row" style="flex-wrap:wrap;margin-top:8px"><span class="mut">Duração da rodada:</span><input id="rkDays" type="number" min="1" max="365" value="${per.days}" style="width:80px;border:1px solid var(--line);border-radius:10px;padding:7px 9px"><span class="mut">dias</span><button class="btn s sm" id="rkSave">Salvar</button><button class="btn p sm" id="rkClose">Encerrar rodada agora e premiar</button></div></div>`:''}`;
+}
+async function adminRanking(body){
+  if(SERVER&&ME){await api('/admin/ranking',{method:'PUT',body})}
+  else{if(body.days)RLOCAL.days=body.days;if(body.closeNow){await loadRanking();const end=Date.now();RLOCAL.awards.unshift({start:RLOCAL.start,end,posts:RANK.top.slice(0,3).map((p,i)=>({place:i+1,total:p.periodTotal,post:p}))});RANK.top.slice(0,3).forEach((p,i)=>{const o=POSTS[p.id];if(o)o.badges=[...(o.badges||[]),{place:i+1,start:RLOCAL.start,end}]});RLOCAL.start=end}}
+  await loadRanking();
+}
+function bindRanking(b){
+  const sv=$('#rkSave',b);if(sv)sv.onclick=async()=>{const d=+$('#rkDays',b).value;try{await adminRanking({days:d});rerender('reels');notify('Ranking atualizado',`Rodadas de ${d} dia${d>1?'s':''}.`,'reels',3000)}catch(e){notify('Erro',e.message,'reels',3500)}};
+  const cl=$('#rkClose',b);if(cl)cl.onclick=async()=>{if(!cl.dataset.ok){cl.dataset.ok=1;cl.textContent='Confirmar? O top 3 recebe medalha';return}try{await adminRanking({closeNow:true});await loadCommunity();rerender('reels');notify('Rodada encerrada 🏆','As medalhas foram entregues ao top 3.','reels',4000)}catch(e){notify('Erro',e.message,'reels',3500)}};
+}
+/* três cliques na imagem/vídeo abrem as reações ali mesmo */
+function bindTripleClick(root){
+  $$('.reel[data-rid]',root).forEach(card=>card.addEventListener('click',e=>{
+    if(e.detail!==3||e.target.closest('.rbar,.rown,.rtop'))return;e.stopPropagation();
+    const bar=$('.rbar',card);if(bar)openPicker(bar,$('[data-rpick]',bar),{x:e.clientX,y:e.clientY});
+  }));
+}
+
 /* ---- COMUNIDADE: stories e reels compartilhados ---- */
 const COMM={stories:[],reels:[]};let MYREELS=[],reelTab='comunidade',reelQ='',reelQT=null,delAsk=null;
 const DEMOREELS=REELS.map((r,i)=>({id:'demo-r'+i,demo:true,kind:'reel',emoji:r.e,g:r.g,text:r.c,petName:r.u,petEmoji:'',reactions:{amei:Math.round(r.l*.5),haha:Math.round(r.l*.2),fofo:Math.round(r.l*.3),uau:0,patinha:Math.round(r.l*.1),brilhou:0},myReaction:null}));
@@ -1391,6 +1560,7 @@ const asStory=p=>({...p,t:p.text,vis:p.visibility});
 function idxPosts(){POSTS={};[...DEMOREELS,...COMM.stories,...COMM.reels,...MYREELS,...S.stories].forEach(p=>{if(p.id)POSTS[p.id]=p})}
 async function loadCommunity(){
   if(!(SERVER&&ME)){idxPosts();return}
+  loadCircles();
   try{
     const [st,re,mine,myst]=await Promise.all([api('/feed?kind=story'),api('/feed?kind=reel&q='+encodeURIComponent(reelQ)),api('/me/posts?kind=reel'),api('/me/posts?kind=story')]);
     MYREELS=mine.posts;const byId=Object.fromEntries(MYREELS.map(p=>[p.id,p]));
@@ -1398,7 +1568,7 @@ async function loadCommunity(){
     S.stories=myst.posts.map(asStory);
     COMM.stories=st.posts.filter(p=>!p.mine);FEED=COMM.stories;
   }catch(e){}
-  idxPosts();
+  idxPosts();loadRanking();
 }
 const ago2=iso=>{const m=Math.round((Date.now()-new Date(iso))/60000);return m<1?'agora':m<60?m+' min':m<1440?Math.round(m/60)+' h':Math.round(m/1440)+' d'};
 function reelCard(p){
@@ -1406,10 +1576,10 @@ function reelCard(p){
     :p.mediaType==='video'?`<video class="rmedia" src="${p.url}" muted loop playsinline autoplay preload="metadata"></video>`
     :`<div class="rmedia rimg" style="background-image:url(${p.url})"></div>`;
   return `<div class="reel" data-rid="${p.id}">${media}
-    <div class="rtop">${p.demo?'<span class="rtag">exemplo</span>':''}${p.mine?`<span class="rtag">${p.visibility==='public'?'🌎 comunidade':'🔒 só você'}</span>`:''}${p.mediaType==='video'?'<button class="rtag rsnd" data-snd title="Som">🔇</button>':''}</div>
+    <div class="rtop">${badgeTag(p)}${p.demo?'<span class="rtag">exemplo</span>':''}${p.mine||(p.visibility&&p.visibility!=='public')?`<span class="rtag ${p.visibility==='close'?'rclose':''}">${audLabel(p)}</span>`:''}${p.mediaType==='video'?'<button class="rtag rsnd" data-snd title="Som">🔇</button>':''}</div>
     <div class="cap"><b>${esc(p.petName||'Pet')} ${p.petEmoji||''}</b>${p.createdAt?` · <span style="opacity:.8">${ago2(p.createdAt)}</span>`:''}<br>${esc(p.text||'')}</div>
     ${reactBar(p)}
-    ${p.mine?`<div class="rown"><button data-vis="${p.id}">${p.visibility==='public'?'🔒 Tornar privado':'🌎 Compartilhar'}</button><button data-del="${p.id}">${delAsk===p.id?'Confirmar?':'🗑️'}</button></div>`:''}</div>`;
+    ${p.mine?`<div class="rown"><button data-vis="${p.id}">👁️ Quem vê</button><button data-del="${p.id}">${delAsk===p.id?'Confirmar?':'🗑️'}</button></div>`:''}</div>`;
 }
 R.reels=()=>{
   const q=norm(reelQ);
@@ -1417,14 +1587,14 @@ R.reels=()=>{
   const lista=reelTab==='meus'?MYREELS:[...COMM.reels,...(COMM.reels.length<6?demo:[])];
   return `<div class="stories">
   <label class="story add" style="cursor:pointer"><div class="rg"><div>＋</div></div>Seu story<input type="file" accept="image/*,video/*" id="stFile" hidden></label>
-  ${S.stories.map((s,i)=>`<button class="story" data-my="${i}" title="${s.vis==='public'?'Compartilhado com a comunidade':'Só você vê'}"><div class="rg"><div style="background-image:url(${s.mediaType==='video'?'':s.url})">${s.mediaType==='video'?'🎬':''}</div></div>${s.vis==='public'?'🌎':'🔒'} ${esc(S.pet.name||'Você')}</button>`).join('')}
-  ${COMM.stories.map((s,i)=>`<button class="story" data-cst="${i}" title="Da comunidade"><div class="rg"><div style="background-image:url(${s.mediaType==='video'?'':s.url})">${s.mediaType==='video'?'🎬':''}</div></div>${esc(s.petName||'Pet')}</button>`).join('')}
+  ${S.stories.map((s,i)=>`<button class="story ${s.vis==='close'?'closef':''}" data-my="${i}" title="${AUD[s.vis||'public'].n}"><div class="rg"><div style="background-image:url(${s.mediaType==='video'?'':s.url})">${s.mediaType==='video'?'🎬':''}</div></div>${AUD[s.vis||'public'].e} ${esc(S.pet.name||'Você')}</button>`).join('')}
+  ${COMM.stories.map((s,i)=>`<button class="story ${s.visibility==='close'?'closef':''}" data-cst="${i}" title="${s.visibility==='close'?'Amigos próximos':s.visibility==='group'?'Grupo':'Da comunidade'}"><div class="rg"><div style="background-image:url(${s.mediaType==='video'?'':s.url})">${s.mediaType==='video'?'🎬':''}</div></div>${esc(s.petName||'Pet')}</button>`).join('')}
   ${STORIES.map((s,i)=>`<button class="story ${s.seen?'seen':''}" data-st="${i}" title="Exemplo"><div class="rg"><div>${s.e}</div></div>${s.n}</button>`).join('')}</div>
   <div class="sec">📚 Biblioteca de aventuras e metas do ${esc(S.pet.name||'seu pet')}</div>
   <div class="stories">${HL.map((h,i)=>`<button class="story" data-hl="${i}"><div class="rg" style="background:linear-gradient(135deg,#efe8ff,#e3f4ff)"><div>${h.e}</div></div>${h.n}</button>`).join('')}</div>
-  <div class="between" style="flex-wrap:wrap;margin:16px 0 12px;gap:10px"><div class="tabs" style="margin:0"><button data-rt="comunidade" class="${reelTab==='comunidade'?'on':''}">🌎 Comunidade</button><button data-rt="meus" class="${reelTab==='meus'?'on':''}">👤 Meus reels (${MYREELS.length})</button></div>
-   <div class="row" style="flex-wrap:wrap"><input id="rq" value="${esc(reelQ)}" placeholder="🔍 Buscar: praia, truque, filhote…" style="border:1px solid var(--line);border-radius:12px;padding:9px 12px;background:#fff;outline:0;min-width:210px"><button class="btn s sm" id="rRef" title="Atualizar">↻</button><label class="btn p sm" style="cursor:pointer">＋ Postar reel<input type="file" accept="video/*,image/*" id="rlFile" hidden></label></div></div>
-  ${lista.length?`<div class="reels">${lista.map(reelCard).join('')}</div>`
+  <div class="between" style="flex-wrap:wrap;margin:16px 0 12px;gap:10px"><div class="tabs" style="margin:0"><button data-rt="comunidade" class="${reelTab==='comunidade'?'on':''}">🌎 Comunidade</button><button data-rt="meus" class="${reelTab==='meus'?'on':''}">👤 Meus reels (${MYREELS.length})</button><button data-rt="ranking" class="${reelTab==='ranking'?'on':''}">🏆 Ranking</button></div>
+   <div class="row" style="flex-wrap:wrap"><input id="rq" value="${esc(reelQ)}" placeholder="🔍 Buscar: praia, truque, filhote…" style="border:1px solid var(--line);border-radius:12px;padding:9px 12px;background:#fff;outline:0;min-width:210px"><button class="btn s sm" id="rRef" title="Atualizar">↻</button><button class="btn s sm" id="rCirc">👥 Amigos e grupos</button><label class="btn p sm" style="cursor:pointer">＋ Postar reel<input type="file" accept="video/*,image/*" id="rlFile" hidden></label></div></div>
+  ${reelTab==='ranking'?rankingHTML():lista.length?`<p class="mut" style="font-size:12px;margin:-4px 0 10px">Dica: clique 3 vezes na foto ou no vídeo para reagir.</p><div class="reels">${lista.map(reelCard).join('')}</div>`
    :`<div class="empty">${reelTab==='meus'?'Você ainda não postou reels. Toque em <b>＋ Postar reel</b> e compartilhe com a comunidade.':`Nada encontrado para “${esc(reelQ)}”.`}</div>`}
   ${!SERVER?'<p class="mut" style="margin-top:10px;font-size:12px;text-align:center">Prévia: aqui os posts ficam só nesta tela. No app em appet.m3d.pro eles são compartilhados com toda a comunidade.</p>':''}`;
 };
@@ -1441,24 +1611,26 @@ function showStory(items,start=0,onDone){
     const dur=vid?8000:4000;
     const step=()=>{const n=performance.now();if($('.rbar.open',v))t0+=n-last;last=n;const pr=(n-t0)/dur;$$('.prog b',v)[i].style.width=Math.min(100,pr*100)+'%';if(pr>=1){it.seen=true;i++;show()}else raf=requestAnimationFrame(step)};step()};
   const close=()=>{cancelAnimationFrame(raf);v.remove();onDone&&onDone()};
-  $('#vx',v).onclick=close;$('#vs',v).onclick=e=>{if(e.target.closest('.rbar'))return;items[i].seen=true;i++;show()};show();
+  let ct=null;
+  $('#vx',v).onclick=close;$('#vs',v).onclick=e=>{if(e.target.closest('.rbar'))return;clearTimeout(ct);
+    if(e.detail>=3){const bar=$('.rbar',v);if(bar){e.stopPropagation();openPicker(bar,$('[data-rpick]',bar),{x:e.clientX,y:e.clientY})}return}
+    if(e.detail===1)ct=setTimeout(()=>{if($('.rpicker.fixed'))return;items[i].seen=true;i++;show()},320)};show();
 }
 B.reels=b=>{
   idxPosts();
   $$('[data-st]',b).forEach(x=>x.onclick=()=>showStory(STORIES,+x.dataset.st,()=>rerender('reels')));
   $$('[data-hl]',b).forEach(x=>x.onclick=()=>showStory(HL,+x.dataset.hl));
-  $$('[data-my]',b).forEach(x=>x.onclick=()=>showStory(S.stories.map(s=>({n:(S.pet.name||'Você')+(s.vis==='public'?' · 🌎':' · 🔒'),url:s.url,t:s.t,post:s.id})),+x.dataset.my));
-  $$('[data-cst]',b).forEach(x=>x.onclick=()=>showStory(COMM.stories.map(s=>({n:`${s.petName||'Pet'} ${s.petEmoji||''}`,url:s.url,t:s.text,post:s.id})),+x.dataset.cst));
-  $$('[data-rt]',b).forEach(x=>x.onclick=()=>{reelTab=x.dataset.rt;rerender('reels')});
+  $$('[data-my]',b).forEach(x=>x.onclick=()=>showStory(S.stories.map(s=>({n:(S.pet.name||'Você')+' · '+audLabel({...s,visibility:s.vis}),url:s.url,t:s.t,post:s.id})),+x.dataset.my));
+  $$('[data-cst]',b).forEach(x=>x.onclick=()=>showStory(COMM.stories.map(s=>({n:`${s.petName||'Pet'} ${s.petEmoji||''}${s.visibility!=='public'?' · '+audLabel(s):''}`,url:s.url,t:s.text,post:s.id})),+x.dataset.cst));
+  $$('[data-rt]',b).forEach(x=>x.onclick=async()=>{reelTab=x.dataset.rt;rerender('reels');if(reelTab==='ranking'){await loadRanking();rerender('reels')}});
+  bindTripleClick(b);bindRanking(b);
   const rq=$('#rq',b);rq.oninput=()=>{clearTimeout(reelQT);reelQT=setTimeout(async()=>{reelQ=rq.value.trim();await loadCommunity();rerender('reels');const n=$('#rq');if(n){n.focus();n.setSelectionRange(n.value.length,n.value.length)}},450)};
   $('#rRef',b).onclick=async()=>{await loadCommunity();rerender('reels')};
   $('#stFile',b).onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)postComposer(f,'story')};
   $('#rlFile',b).onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)postComposer(f,'reel')};
   $$('[data-snd]',b).forEach(x=>x.onclick=e=>{e.stopPropagation();const vd=x.closest('.reel').querySelector('video');if(!vd)return;vd.muted=!vd.muted;x.textContent=vd.muted?'🔇':'🔊';if(!vd.muted)vd.play().catch(()=>{})});
-  $$('[data-vis]',b).forEach(x=>x.onclick=async e=>{e.stopPropagation();const p=POSTS[x.dataset.vis];if(!p)return;const vis=p.visibility==='public'?'private':'public';
-    try{if(SERVER&&ME&&!p.local){const d=await api(`/me/posts/${p.id}`,{method:'PATCH',body:{visibility:vis}});Object.assign(p,d.post)}else p.visibility=vis;
-      if(SERVER&&ME)await loadCommunity();else{COMM.reels=MYREELS.filter(r=>r.visibility==='public')}
-      rerender('reels');notify(vis==='public'?'Compartilhado 🌎':'Agora é privado 🔒',vis==='public'?'Todos da comunidade podem ver e reagir.':'Só você vê este reel.','reels',3000)}catch(err){notify('Não foi possível',err.message,'reels',3500)}});
+  $$('[data-vis]',b).forEach(x=>x.onclick=e=>{e.stopPropagation();const p=POSTS[x.dataset.vis];if(p)openAudienceModal(p)});
+  const ci=$('#rCirc',b);if(ci)ci.onclick=()=>openCircles();
   $$('[data-del]',b).forEach(x=>x.onclick=async e=>{e.stopPropagation();const id=x.dataset.del;if(delAsk!==id){delAsk=id;rerender('reels');return}delAsk=null;
     try{if(SERVER&&ME&&!POSTS[id]?.local)await api(`/me/posts/${id}`,{method:'DELETE'});MYREELS=MYREELS.filter(p=>p.id!==id);COMM.reels=COMM.reels.filter(p=>p.id!==id);idxPosts();rerender('reels')}catch(err){notify('Não foi possível apagar',err.message,'reels',3500)}});
   bindReacts(b);
@@ -2143,7 +2315,7 @@ function applyProfile(p){
   S.pet=Object.assign({},PDEF.pet,p.pet||{});S.chip=Object.assign({},PDEF.chip,p.chip||{});
 }
 async function loadAccount(){
-  applyProfile(PDEF);S.stories=[];FEED=[];COMM.stories=[];COMM.reels=[];MYREELS=[];
+  applyProfile(PDEF);S.stories=[];FEED=[];COMM.stories=[];COMM.reels=[];MYREELS=[];CIRCLES={close:[],groups:[]};
   const {profile}=await api('/me/profile');if(profile)applyProfile(profile);
   if(!profile){S.tutor=ME.name||'';S.pet=Object.assign({},PDEF.pet,{name:'',breed:'',age:''})}
   S._hadPhoto=!!S.photo;
@@ -2202,31 +2374,29 @@ async function initServer(){
 function postComposer(file,kind){
   const isVid=file.type.startsWith('video/');
   if(isVid&&file.size>60*1024*1024){notify('Vídeo muito grande','O limite é 60 MB. Corte ou comprima o vídeo e tente de novo.','reels',4500);return}
-  const open=src=>{let vis='public';
+  const open=src=>{const st={vis:'public',groups:new Set()};
     const w=document.createElement('div');w.className='modalwrap';document.body.appendChild(w);
     w.innerHTML=`<div class="modal" style="width:min(460px,100%)"><h2>${kind==='reel'?'Novo reel':'Novo story'}</h2>
       ${isVid?`<video src="${src}" controls playsinline style="width:100%;max-height:260px;border-radius:16px;background:#000;margin:12px 0"></video>`:`<div class="photodrop" style="height:240px;background-image:url(${src});margin:12px 0;cursor:default"></div>`}
       <div class="f"><label>Legenda</label><input id="stT" maxlength="220" value="${kind==='reel'?'':`Dia de aventura do ${esc(S.pet.name||'meu pet')} 🐾`}" placeholder="Conte o que está acontecendo… use palavras que ajudem na busca"></div>
-      <div class="f"><label>Quem pode ver?</label><div class="pick" id="stV"><button type="button" class="on" data-v="public">🌎 Comunidade</button><button type="button" data-v="private">🔒 Só eu</button></div></div>
-      <p class="mut" id="stH">Todos os tutores do APPET podem ver e reagir. Você pode tornar privado depois.</p>
+      <div class="audbox"></div>
       <div class="mact"><button class="btn g" id="stC">Cancelar</button><button class="btn p" id="stP">Publicar</button></div></div>`;
-    $$('#stV button',w).forEach(b=>b.onclick=()=>{vis=b.dataset.v;$$('#stV button',w).forEach(x=>x.classList.toggle('on',x===b));
-      $('#stH',w).textContent=vis==='public'?'Todos os tutores do APPET podem ver e reagir. Você pode tornar privado depois.':'Fica só na sua conta. Ninguém mais vê.'});
+    bindAud($('.audbox',w),st);
     $('#stC',w).onclick=()=>w.remove();
-    $('#stP',w).onclick=async()=>{const t=$('#stT',w).value.trim();const btn=$('#stP',w);btn.disabled=true;btn.textContent='Enviando…';
+    $('#stP',w).onclick=async()=>{if(!audValid(st))return;const vis=st.vis;const t=$('#stT',w).value.trim();const btn=$('#stP',w);btn.disabled=true;btn.textContent='Enviando…';
       try{
         let post;
         if(SERVER&&ME){
           const blob=isVid?file:await (await fetch(src)).blob();
-          const qs=new URLSearchParams({kind,visibility:vis,text:t});
+          const qs=new URLSearchParams({kind,visibility:vis,text:t,groups:[...st.groups].join(',')});
           const r=await fetch('/api/me/posts?'+qs,{method:'POST',credentials:'same-origin',headers:{'content-type':blob.type||'application/octet-stream'},body:blob});
           const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||('Erro '+r.status));post=d.post;
-        }else post={id:'loc'+Date.now(),local:true,kind,url:src,mediaType:isVid?'video':'image',text:t,visibility:vis,petName:S.pet.name,petEmoji:S.pet.emoji,createdAt:new Date().toISOString(),mine:true,reactions:{},myReaction:null};
+        }else post={id:'loc'+Date.now(),local:true,kind,url:src,mediaType:isVid?'video':'image',text:t,visibility:vis,audience:localAudience(st),petName:S.pet.name,petEmoji:S.pet.emoji,createdAt:new Date().toISOString(),mine:true,reactions:{},myReaction:null};
         if(kind==='story')S.stories.unshift(asStory(post));
-        else{MYREELS.unshift(post);if(vis==='public')COMM.reels.unshift(post);reelTab=vis==='public'?'comunidade':'meus'}
+        else{MYREELS.unshift(post);if(vis!=='private')COMM.reels.unshift(post);reelTab=vis!=='private'?'comunidade':'meus'}
         idxPosts();w.remove();rerender('reels');
         if(!S.storyXP){S.storyXP=1;addXP(10,kind==='reel'?'Primeiro reel publicado!':'Primeiro story publicado!')}
-        notify(kind==='reel'?'Reel publicado':'Story publicado',vis==='public'?'Compartilhado com a comunidade 🌎':'Só você vê 🔒','reels',3000);
+        notify(kind==='reel'?'Reel publicado':'Story publicado',`Quem vê: ${AUD[vis].e} ${AUD[vis].n}`,'reels',3000);
       }catch(e){btn.disabled=false;btn.textContent='Publicar';notify('Não foi possível publicar',e.message,'reels',4500)}
     };
   };
