@@ -11,9 +11,16 @@ const db = () => store.get();
 function settings() {
   const s = db().settings;
   if (!s.rankingDays) s.rankingDays = 7;
-  if (!s.periodStart) { s.periodStart = Date.now(); store.save(); }
+  if (!s.periodStart) { s.periodStart = lastMonday(); store.save(); }
   return s;
 }
+/** segunda-feira 00:00 no horário de Brasília (UTC-3) mais recente */
+function lastMonday(now = Date.now()) {
+  const BRT = 3 * 3600e3, d = new Date(now - BRT);
+  const back = (d.getUTCDay() + 6) % 7;
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - back) + BRT;
+}
+settings(); // fixa o início da rodada assim que o servidor liga
 /** posts públicos ordenados pelas reações recebidas dentro da janela [start, end) */
 export function rank(start, end, limit = 10) {
   return db().stories.filter(p => p.visibility === 'public').map(p => {
