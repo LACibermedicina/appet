@@ -111,7 +111,7 @@ if [ "$MODO" = nginx ]; then
   if [ -d /etc/nginx/sites-available ]; then CONF="/etc/nginx/sites-available/$DOMINIO.conf"; LINK="/etc/nginx/sites-enabled/$DOMINIO.conf"
   else CONF="/etc/nginx/conf.d/$DOMINIO.conf"; LINK=""; fi
   CERT="/etc/letsencrypt/live/$DOMINIO"
-  bloco_proxy="    client_max_body_size 10m;
+  bloco_proxy="    client_max_body_size 64m;
     location / {
         proxy_pass http://127.0.0.1:$PORTA;
         proxy_http_version 1.1;

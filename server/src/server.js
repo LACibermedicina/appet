@@ -9,6 +9,7 @@ import { askAI, PROMPTS } from './ai.js';
 import { PACKAGES, createPaymentLink, parseStripeWebhook, checkMercadoPago } from './payments.js';
 import { store } from './store.js';
 import { authRouter, sessionMiddleware, requireAuth } from './auth.js';
+import { postsRouter } from './posts.js';
 
 const { RtcTokenBuilder, RtcRole } = agoraToken;
 const env = process.env;
@@ -26,6 +27,7 @@ app.post('/api/pay/webhook/stripe', express.raw({ type: 'application/json' }), a
 
 app.use(sessionMiddleware);
 app.use('/api', authRouter());
+app.use('/api', postsRouter());
 app.use(express.json({ limit: '2mb' }));
 
 const userOf = req => req.user.id; // sempre a conta logada

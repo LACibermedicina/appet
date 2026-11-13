@@ -45,6 +45,8 @@ Com o servidor rodando, o app passa a usar a IA de verdade pela rota `/api/ai/ra
 - Brechó Pet (novos e usados, escrow, IA de anúncio, mediação de disputas por argumentos)
 - Consulta IA com triagem de urgência e videoconsulta
 - PetMatch (amizade ou algo mais, com regras de cruzamento responsável)
+- Contas de usuário: cada pessoa só vê os próprios dados privados
+- Comunidade: stories e reels (foto ou vídeo até 60 MB) compartilhados, com busca e reações em estilo cartoon 3D (Amei, Haha, Uau, Que fofo, Patinha, Brilhou)
 
 ## O que ainda falta ligar para produção
 - **Pagamentos no app:** a função `checkout()` do `index.html` ainda simula. Troque o clique "Pagar" por `POST /api/pay/link` e abra a `url` retornada.

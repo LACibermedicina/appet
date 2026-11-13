@@ -465,6 +465,41 @@ canvas.wave{width:100%;height:90px;display:block;border-radius:14px;background:#
 .itsmatch .heart{font-size:40px;animation:beat 1s infinite}@keyframes beat{50%{transform:scale(1.25)}}
 .respons{border-radius:14px;padding:10px 12px;background:#fff4e6;color:#8a4b00;font-size:12px;line-height:1.45;margin-bottom:12px}
 
+
+/* ---- comunidade e reações ---- */
+.reel .rmedia{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#120c26 center/cover no-repeat}
+.reel .cap{margin-bottom:46px;z-index:2}
+.reel::after{content:"";position:absolute;inset:auto 0 0 0;height:55%;background:linear-gradient(transparent,rgba(15,8,40,.72));pointer-events:none;z-index:1}
+.reel .rtop{position:absolute;top:8px;left:8px;right:8px;display:flex;gap:5px;z-index:3}
+.reel .rtag{font-size:10px;font-weight:800;background:rgba(255,255,255,.88);color:var(--ink);padding:3px 8px;border-radius:99px}
+.reel .rsnd{margin-left:auto;font-size:12px;padding:3px 7px}
+.reel .rown{position:absolute;top:34px;right:8px;display:flex;flex-direction:column;gap:5px;z-index:3}
+.reel .rown button{font-size:11px;font-weight:700;background:rgba(255,255,255,.88);color:var(--ink);padding:4px 8px;border-radius:9px}
+.reel .rbar{position:absolute;left:10px;bottom:10px;z-index:4}
+.rbar{display:inline-flex;align-items:center;gap:6px;position:relative}
+.rbtn{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.94);color:var(--ink);border-radius:99px;padding:4px 10px 4px 6px;font-size:12px;font-weight:800;box-shadow:0 4px 12px rgba(30,15,80,.2);transition:transform .2s cubic-bezier(.3,1.8,.5,1)}
+.rbtn:hover{transform:scale(1.06)}.rbtn .rplus{padding-left:4px}
+.rbtn.on{background:#fff;box-shadow:0 0 0 2px var(--violet),0 4px 12px rgba(30,15,80,.2)}
+.rsum{display:inline-flex;align-items:center;background:rgba(255,255,255,.9);border-radius:99px;padding:2px 9px 2px 4px;box-shadow:0 4px 12px rgba(30,15,80,.15)}
+.rsum .rsvg+.rsvg{margin-left:-7px}.rsum b{font-size:12px;color:var(--ink);margin-left:4px}
+.rpicker{position:absolute;bottom:calc(100% + 10px);left:-4px;display:flex;gap:2px;background:#fff;border-radius:99px;padding:6px 10px;box-shadow:0 14px 40px rgba(40,20,110,.3),0 0 0 1px var(--line);opacity:0;pointer-events:none;transform:translateY(12px) scale(.85);transform-origin:bottom left;transition:.22s cubic-bezier(.3,1.5,.5,1);z-index:20}
+.rbar.open .rpicker,.rpicker.fixed{opacity:1;pointer-events:auto;transform:none}
+.rpicker.fixed{position:fixed;bottom:auto;z-index:400;padding:8px 12px;gap:4px}
+.rpicker button{position:relative;display:flex;flex-direction:column;align-items:center;transition:transform .22s cubic-bezier(.3,1.9,.5,1)}
+.rpicker button:hover{transform:translateY(-10px) scale(1.3)}
+.rpicker button.on::after{content:"";position:absolute;bottom:-4px;width:5px;height:5px;border-radius:50%;background:var(--violet)}
+.rpicker small{position:absolute;top:-20px;font-size:10px;font-weight:800;background:#1d1b3a;color:#fff;padding:2px 6px;border-radius:6px;white-space:nowrap;opacity:0;transition:.15s}
+.rpicker button:hover small{opacity:1}
+.rpicker.fixed button,.rbar.open .rpicker button{animation:rpop .4s cubic-bezier(.2,1.9,.4,1) backwards}
+.rpicker.fixed button:nth-child(2){animation-delay:.03s}.rpicker.fixed button:nth-child(3){animation-delay:.06s}.rpicker.fixed button:nth-child(4){animation-delay:.09s}.rpicker.fixed button:nth-child(5){animation-delay:.12s}.rpicker.fixed button:nth-child(6){animation-delay:.15s}
+@keyframes rpop{from{transform:translateY(16px) scale(.3);opacity:0}}
+.rsvg{display:block;filter:drop-shadow(0 2px 2px rgba(40,20,90,.18))}
+.rpicker .rsvg{animation:rwob 2.4s ease-in-out infinite}.rpicker button:nth-child(even) .rsvg{animation-delay:-1.2s}
+@keyframes rwob{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg) scale(1.04)}75%{transform:rotate(6deg)}}
+.rfly{position:fixed;pointer-events:none;z-index:300;animation:rfly 1.1s cubic-bezier(.2,.7,.4,1) forwards}
+@keyframes rfly{0%{transform:translate(0,0) scale(.4);opacity:0}15%{opacity:1}100%{transform:translate(var(--dx),-150px) scale(1.5) rotate(var(--rot));opacity:0}}
+.viewer .vreact{position:absolute;left:16px;bottom:70px;z-index:3;font-size:13px}
+
 /* foto de fundo + identificação */
 #photoBg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .8s}
 #photoBg.on{opacity:1}
@@ -1290,32 +1325,143 @@ const REELS=[
 ];
 const STORIES=[{n:'Luna',e:'🐩',t:'Praia hoje! 🌊'},{n:'Bento',e:'🦮',t:'Meta batida: 7 dias sem puxar'},{n:'Mel',e:'🐶',t:'Banho tomado, cheirosa ✨'},{n:'Paçoca',e:'🐕',t:'Novo truque: rolar!'},{n:'Nina',e:'🐱',t:'Soneca de 4 horas 😴'}];
 const HL=[{n:'Metas',e:'🏆',t:'Meta: 10 dias seguidos de “fica”'},{n:'Trilhas',e:'⛰️',t:'Circuito Parque Urbano · 2/5'},{n:'Conquistas',e:'🎓',t:'Medalha: Primeiros passos'},{n:'Antes/Depois',e:'✨',t:'Dia 1 → Dia 14 do desafio'}];
-const liked={};
-R.reels=()=>`<div class="stories">
-  <label class="story add" style="cursor:pointer"><div class="rg"><div>＋</div></div>Seu story<input type="file" accept="image/*" id="stFile" hidden></label>
-  ${S.stories.map((s,i)=>`<button class="story" data-my="${i}" title="${s.vis==='public'?'Visível para a comunidade':'Só você vê'}"><div class="rg"><div style="background-image:url(${s.url})"></div></div>${s.vis==='public'?'🌎':'🔒'} ${esc(S.pet.name)}</button>`).join('')}
-  ${STORIES.map((s,i)=>`<button class="story ${s.seen?'seen':''}" data-st="${i}"><div class="rg"><div>${s.e}</div></div>${s.n}</button>`).join('')}</div>
-  <div class="sec">📚 Biblioteca de aventuras e metas do ${S.pet.name}</div>
+/* ---- REAÇÕES em estilo cartoon 3D (desenhos originais em SVG) ---- */
+const REACTS=[{id:'amei',n:'Amei'},{id:'haha',n:'Haha'},{id:'uau',n:'Uau'},{id:'fofo',n:'Que fofo'},{id:'patinha',n:'Patinha'},{id:'brilhou',n:'Brilhou'}];
+let rsvgN=0;
+function reactSVG(id,s=28){
+  const k='r'+(++rsvgN);
+  const shadow='<ellipse cx="32" cy="61" rx="17" ry="2.6" fill="#1d1b3a" opacity=".16"/>';
+  const ball=(a,b,c)=>`<defs><radialGradient id="${k}b" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="${a}"/><stop offset=".55" stop-color="${b}"/><stop offset="1" stop-color="${c}"/></radialGradient></defs>${shadow}<circle cx="32" cy="32" r="26" fill="url(#${k}b)"/><circle cx="32" cy="32" r="26" fill="none" stroke="#000" stroke-opacity=".08" stroke-width="1.5"/><ellipse cx="23" cy="17" rx="10" ry="5.5" fill="#fff" opacity=".6" transform="rotate(-28 23 17)"/>`;
+  const eye=(x,y,r=6.2,look=0)=>`<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*1.18}" fill="#fff"/><circle cx="${x+look}" cy="${y+1}" r="${r*.68}" fill="#3b2412"/><circle cx="${x+look}" cy="${y+1}" r="${r*.36}" fill="#0d0705"/><circle cx="${x+look-r*.25}" cy="${y-r*.25}" r="${r*.24}" fill="#fff"/><circle cx="${x+look+r*.25}" cy="${y+r*.35}" r="${r*.11}" fill="#fff"/>`;
+  const blush=(o=.45)=>`<ellipse cx="15.5" cy="38" rx="4.5" ry="2.6" fill="#ff6f91" opacity="${o}"/><ellipse cx="48.5" cy="38" rx="4.5" ry="2.6" fill="#ff6f91" opacity="${o}"/>`;
+  const Y=['#fff6b8','#ffd23a','#f29a00'];
+  let body='';
+  if(id==='amei')body=`<defs><radialGradient id="${k}h" cx="35%" cy="25%" r="85%"><stop offset="0" stop-color="#ffb3c6"/><stop offset=".5" stop-color="#ff4d7a"/><stop offset="1" stop-color="#c4103f"/></radialGradient></defs>${shadow}<path d="M32 56 C10 42 5 30 8 20 C11 10 24 7 32 17 C40 7 53 10 56 20 C59 30 54 42 32 56Z" fill="url(#${k}h)"/><ellipse cx="18" cy="17" rx="7" ry="4" fill="#fff" opacity=".55" transform="rotate(-30 18 17)"/>${eye(24,30,5.4)}${eye(40,30,5.4)}<path d="M27 40 Q32 45 37 40" stroke="#7a0a26" stroke-width="2.4" fill="none" stroke-linecap="round"/><ellipse cx="17" cy="38" rx="3.6" ry="2.2" fill="#fff" opacity=".35"/><ellipse cx="47" cy="38" rx="3.6" ry="2.2" fill="#fff" opacity=".35"/>`;
+  else if(id==='haha')body=`${ball(...Y)}<path d="M17 26 Q22 20 27 26" stroke="#5a3200" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M37 26 Q42 20 47 26" stroke="#5a3200" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M17 34 Q32 56 47 34 Z" fill="#7a1d12"/><path d="M24 44 Q32 52 40 44 Q32 41 24 44Z" fill="#ff7a7a"/><path d="M19 35 L45 35 L44 37.5 L20 37.5Z" fill="#fff"/><path d="M11 30 q-4 6 0 9 q4 -3 0 -9Z" fill="#7cd3ff"/><path d="M53 30 q4 6 0 9 q-4 -3 0 -9Z" fill="#7cd3ff"/>${blush(.35)}`;
+  else if(id==='uau')body=`${ball(...Y)}<path d="M15 17 Q21 12 27 16" stroke="#5a3200" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M37 16 Q43 12 49 17" stroke="#5a3200" stroke-width="2.6" fill="none" stroke-linecap="round"/>${eye(22,27,7)}${eye(42,27,7)}<ellipse cx="32" cy="45" rx="5.5" ry="7" fill="#7a1d12"/><ellipse cx="32" cy="48" rx="3.4" ry="2.6" fill="#ff7a7a"/>${blush(.3)}`;
+  else if(id==='fofo')body=`${ball('#fff1c9','#ffc95a','#e8890b')}${eye(22,30,8,0)}${eye(42,30,8,0)}<path d="M15 41 q1.5 5 4 2" fill="#7cd3ff"/><path d="M28 44 Q30 42 32 44 Q34 42 36 44" stroke="#5a3200" stroke-width="2.2" fill="none" stroke-linecap="round"/>${blush(.6)}`;
+  else if(id==='patinha')body=`<defs><radialGradient id="${k}p" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="#ffd9e6"/><stop offset=".55" stop-color="#ff86ad"/><stop offset="1" stop-color="#d94b7d"/></radialGradient></defs>${shadow}<g fill="url(#${k}p)"><ellipse cx="32" cy="42" rx="15" ry="12.5"/><ellipse cx="13.5" cy="27" rx="6.5" ry="8.2" transform="rotate(-20 13.5 27)"/><ellipse cx="24.5" cy="15.5" rx="6.8" ry="8.6" transform="rotate(-6 24.5 15.5)"/><ellipse cx="39.5" cy="15.5" rx="6.8" ry="8.6" transform="rotate(6 39.5 15.5)"/><ellipse cx="50.5" cy="27" rx="6.5" ry="8.2" transform="rotate(20 50.5 27)"/></g><g fill="#fff" opacity=".6"><ellipse cx="26" cy="36" rx="5" ry="2.6" transform="rotate(-20 26 36)"/><ellipse cx="11.5" cy="23" rx="2" ry="3" transform="rotate(-20 11.5 23)"/><ellipse cx="22.5" cy="11.5" rx="2.2" ry="3.2"/><ellipse cx="37.5" cy="11.5" rx="2.2" ry="3.2"/><ellipse cx="48.5" cy="23" rx="2" ry="3" transform="rotate(20 48.5 23)"/></g>`;
+  else body=`<defs><radialGradient id="${k}s" cx="38%" cy="30%" r="80%"><stop offset="0" stop-color="#fffbd6"/><stop offset=".5" stop-color="#ffd23a"/><stop offset="1" stop-color="#f08a00"/></radialGradient></defs>${shadow}<path d="M32 4 L39.5 21.5 L58.5 23 L44 35.5 L48.5 54.5 L32 44.5 L15.5 54.5 L20 35.5 L5.5 23 L24.5 21.5Z" fill="url(#${k}s)" stroke="#e07a00" stroke-width="1.2" stroke-linejoin="round"/><ellipse cx="25" cy="17" rx="5" ry="3" fill="#fff" opacity=".65" transform="rotate(-30 25 17)"/>${eye(26,30,4.6)}${eye(38,30,4.6)}<path d="M27.5 38 Q32 42.5 36.5 38" stroke="#7a3d00" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="52" cy="10" r="2.2" fill="#fff"/><circle cx="9" cy="44" r="1.6" fill="#fff"/>`;
+  return `<svg class="rsvg" width="${s}" height="${s}" viewBox="0 0 64 64" aria-hidden="true">${body}</svg>`;
+}
+function reactBar(p){
+  const rc=p.reactions||{};const tot=Object.values(rc).reduce((a,b)=>a+b,0);
+  const top=Object.entries(rc).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const meu=p.myReaction;
+  return `<div class="rbar" data-post="${p.id}"><button class="rbtn ${meu?'on':''}" data-rpick title="Reagir">${meu?reactSVG(meu,22)+`<span>${REACTS.find(r=>r.id===meu).n}</span>`:'<span class="rplus">＋ Reagir</span>'}</button>${tot?`<span class="rsum">${top.map(([k])=>reactSVG(k,20)).join('')}<b>${tot}</b></span>`:''}
+</div>`;
+}
+let POSTS={};
+function closePicker(){$$('.rpicker.fixed').forEach(p=>p.remove());$$('.rbar.open').forEach(o=>o.classList.remove('open'))}
+function openPicker(bar,btn){
+  const was=bar.classList.contains('open');closePicker();if(was)return;
+  const id=bar.dataset.post,p=POSTS[id];if(!p)return;bar.classList.add('open');
+  const pk=document.createElement('div');pk.className='rpicker fixed';
+  pk.innerHTML=REACTS.map(r=>`<button data-react="${r.id}" class="${p.myReaction===r.id?'on':''}" title="${r.n}">${reactSVG(r.id,42)}<small>${r.n}</small></button>`).join('');
+  document.body.appendChild(pk);pickerAt=Date.now();
+  const r=btn.getBoundingClientRect(),w=pk.offsetWidth,h=pk.offsetHeight;
+  pk.style.left=clamp(r.left-6,8,innerWidth-w-8)+'px';
+  pk.style.top=(r.top-h-10<8?r.bottom+10:r.top-h-10)+'px';
+  pk.onclick=e=>e.stopPropagation();
+  $$('[data-react]',pk).forEach(x=>x.onclick=e=>{e.stopPropagation();closePicker();react(id,x.dataset.react,btn.isConnected?btn:x)});
+}
+function bindReacts(root){
+  $$('[data-rpick]',root).forEach(x=>x.onclick=e=>{e.stopPropagation();openPicker(x.closest('.rbar'),x)});
+}
+document.addEventListener('click',closePicker);
+let pickerAt=0;addEventListener('resize',closePicker);document.addEventListener('scroll',()=>{if(Date.now()-pickerAt>350)closePicker()},true);
+function burst(id,el){
+  const r=el.getBoundingClientRect();
+  for(let i=0;i<6;i++){const s=document.createElement('div');s.className='rfly';s.innerHTML=reactSVG(id,34);
+    s.style.left=(r.left+r.width/2-17)+'px';s.style.top=(r.top-4)+'px';s.style.setProperty('--dx',(Math.random()*120-60)+'px');s.style.setProperty('--rot',(Math.random()*60-30)+'deg');s.style.animationDelay=(i*.05)+'s';
+    document.body.appendChild(s);setTimeout(()=>s.remove(),1300)}
+}
+function refreshReactUI(id){const n=$(`.rbar[data-post="${id}"] [data-rpick]`);$$(`.rbar[data-post="${id}"]`).forEach(bar=>{const t=document.createElement('div');t.innerHTML=reactBar(POSTS[id]);const nb=t.firstElementChild;bar.replaceWith(nb);bindReacts(nb)})}
+async function react(id,emo,el){
+  const p=POSTS[id];if(!p)return;const prev=p.myReaction||null,next=prev===emo?null:emo;
+  p.reactions={...(p.reactions||{})};if(prev)p.reactions[prev]=Math.max(0,(p.reactions[prev]||1)-1);if(next)p.reactions[next]=(p.reactions[next]||0)+1;p.myReaction=next;
+  if(next)burst(next,el);refreshReactUI(id);
+  if(SERVER&&ME&&!p.demo&&!p.local){try{const d=await api(`/posts/${id}/react`,{method:'POST',body:{emoji:next}});p.reactions=d.reactions;p.myReaction=d.myReaction;refreshReactUI(id)}catch(e){notify('Não deu para reagir',e.message,'reels',3000)}}
+}
+
+/* ---- COMUNIDADE: stories e reels compartilhados ---- */
+const COMM={stories:[],reels:[]};let MYREELS=[],reelTab='comunidade',reelQ='',reelQT=null,delAsk=null;
+const DEMOREELS=REELS.map((r,i)=>({id:'demo-r'+i,demo:true,kind:'reel',emoji:r.e,g:r.g,text:r.c,petName:r.u,petEmoji:'',reactions:{amei:Math.round(r.l*.5),haha:Math.round(r.l*.2),fofo:Math.round(r.l*.3),uau:0,patinha:Math.round(r.l*.1),brilhou:0},myReaction:null}));
+const asStory=p=>({...p,t:p.text,vis:p.visibility});
+function idxPosts(){POSTS={};[...DEMOREELS,...COMM.stories,...COMM.reels,...MYREELS,...S.stories].forEach(p=>{if(p.id)POSTS[p.id]=p})}
+async function loadCommunity(){
+  if(!(SERVER&&ME)){idxPosts();return}
+  try{
+    const [st,re,mine,myst]=await Promise.all([api('/feed?kind=story'),api('/feed?kind=reel&q='+encodeURIComponent(reelQ)),api('/me/posts?kind=reel'),api('/me/posts?kind=story')]);
+    MYREELS=mine.posts;const byId=Object.fromEntries(MYREELS.map(p=>[p.id,p]));
+    COMM.reels=re.posts.map(p=>byId[p.id]||p);
+    S.stories=myst.posts.map(asStory);
+    COMM.stories=st.posts.filter(p=>!p.mine);FEED=COMM.stories;
+  }catch(e){}
+  idxPosts();
+}
+const ago2=iso=>{const m=Math.round((Date.now()-new Date(iso))/60000);return m<1?'agora':m<60?m+' min':m<1440?Math.round(m/60)+' h':Math.round(m/1440)+' d'};
+function reelCard(p){
+  const media=p.demo?`<div class="bgm" style="background:${p.g}"></div><div class="pet">${p.emoji}</div>`
+    :p.mediaType==='video'?`<video class="rmedia" src="${p.url}" muted loop playsinline autoplay preload="metadata"></video>`
+    :`<div class="rmedia rimg" style="background-image:url(${p.url})"></div>`;
+  return `<div class="reel" data-rid="${p.id}">${media}
+    <div class="rtop">${p.demo?'<span class="rtag">exemplo</span>':''}${p.mine?`<span class="rtag">${p.visibility==='public'?'🌎 comunidade':'🔒 só você'}</span>`:''}${p.mediaType==='video'?'<button class="rtag rsnd" data-snd title="Som">🔇</button>':''}</div>
+    <div class="cap"><b>${esc(p.petName||'Pet')} ${p.petEmoji||''}</b>${p.createdAt?` · <span style="opacity:.8">${ago2(p.createdAt)}</span>`:''}<br>${esc(p.text||'')}</div>
+    ${reactBar(p)}
+    ${p.mine?`<div class="rown"><button data-vis="${p.id}">${p.visibility==='public'?'🔒 Tornar privado':'🌎 Compartilhar'}</button><button data-del="${p.id}">${delAsk===p.id?'Confirmar?':'🗑️'}</button></div>`:''}</div>`;
+}
+R.reels=()=>{
+  const q=norm(reelQ);
+  const demo=DEMOREELS.filter(p=>!q||norm(p.text+' '+p.petName).includes(q));
+  const lista=reelTab==='meus'?MYREELS:[...COMM.reels,...(COMM.reels.length<6?demo:[])];
+  return `<div class="stories">
+  <label class="story add" style="cursor:pointer"><div class="rg"><div>＋</div></div>Seu story<input type="file" accept="image/*,video/*" id="stFile" hidden></label>
+  ${S.stories.map((s,i)=>`<button class="story" data-my="${i}" title="${s.vis==='public'?'Compartilhado com a comunidade':'Só você vê'}"><div class="rg"><div style="background-image:url(${s.mediaType==='video'?'':s.url})">${s.mediaType==='video'?'🎬':''}</div></div>${s.vis==='public'?'🌎':'🔒'} ${esc(S.pet.name||'Você')}</button>`).join('')}
+  ${COMM.stories.map((s,i)=>`<button class="story" data-cst="${i}" title="Da comunidade"><div class="rg"><div style="background-image:url(${s.mediaType==='video'?'':s.url})">${s.mediaType==='video'?'🎬':''}</div></div>${esc(s.petName||'Pet')}</button>`).join('')}
+  ${STORIES.map((s,i)=>`<button class="story ${s.seen?'seen':''}" data-st="${i}" title="Exemplo"><div class="rg"><div>${s.e}</div></div>${s.n}</button>`).join('')}</div>
+  <div class="sec">📚 Biblioteca de aventuras e metas do ${esc(S.pet.name||'seu pet')}</div>
   <div class="stories">${HL.map((h,i)=>`<button class="story" data-hl="${i}"><div class="rg" style="background:linear-gradient(135deg,#efe8ff,#e3f4ff)"><div>${h.e}</div></div>${h.n}</button>`).join('')}</div>
-  <div class="sec">🎬 Reels da comunidade</div>
-  <div class="reels">${REELS.map((r,i)=>`<div class="reel" data-r="${i}"><div class="bgm" style="background:${r.g}"></div><div class="pet">${r.e}</div><div class="side"><button data-like="${i}">${liked[i]?'❤️':'🤍'}</button>${r.l+(liked[i]?1:0)}<button>💬</button>${Math.round(r.l/9)}<button>↗️</button></div><div class="cap"><b>${r.u}</b><br>${r.c}</div></div>`).join('')}</div>`;
+  <div class="between" style="flex-wrap:wrap;margin:16px 0 12px;gap:10px"><div class="tabs" style="margin:0"><button data-rt="comunidade" class="${reelTab==='comunidade'?'on':''}">🌎 Comunidade</button><button data-rt="meus" class="${reelTab==='meus'?'on':''}">👤 Meus reels (${MYREELS.length})</button></div>
+   <div class="row" style="flex-wrap:wrap"><input id="rq" value="${esc(reelQ)}" placeholder="🔍 Buscar: praia, truque, filhote…" style="border:1px solid var(--line);border-radius:12px;padding:9px 12px;background:#fff;outline:0;min-width:210px"><button class="btn s sm" id="rRef" title="Atualizar">↻</button><label class="btn p sm" style="cursor:pointer">＋ Postar reel<input type="file" accept="video/*,image/*" id="rlFile" hidden></label></div></div>
+  ${lista.length?`<div class="reels">${lista.map(reelCard).join('')}</div>`
+   :`<div class="empty">${reelTab==='meus'?'Você ainda não postou reels. Toque em <b>＋ Postar reel</b> e compartilhe com a comunidade.':`Nada encontrado para “${esc(reelQ)}”.`}</div>`}
+  ${!SERVER?'<p class="mut" style="margin-top:10px;font-size:12px;text-align:center">Prévia: aqui os posts ficam só nesta tela. No app em appet.m3d.pro eles são compartilhados com toda a comunidade.</p>':''}`;
+};
 function showStory(items,start=0,onDone){
-  const host=wins.reels;const v=document.createElement('div');v.className='viewer';
-  v.innerHTML=`<div class="prog">${items.map(()=>'<i><b></b></i>').join('')}</div><div class="row" style="padding:0 12px"><b id="vn"></b><span style="flex:1"></span><button id="vx" style="font-size:22px;color:#fff">×</button></div><div class="stage" id="vs"><p id="vt"></p></div>`;
-  host.appendChild(v);let i=start,raf,t0;
-  const show=()=>{if(i>=items.length){close();return}const it=items[i];$('#vn',v).textContent=it.n;$('#vt',v).textContent=it.t||'';const st=$('#vs',v);
-    st.style.backgroundImage=it.url?`url(${it.url})`:'';st.firstChild.nodeType===3&&st.firstChild.remove();if(!it.url)st.insertAdjacentText('afterbegin',it.e);
-    $$('.prog b',v).forEach((b,j)=>b.style.width=j<i?'100%':'0');t0=performance.now();cancelAnimationFrame(raf);
-    const step=()=>{const p=(performance.now()-t0)/3500;$$('.prog b',v)[i].style.width=Math.min(100,p*100)+'%';if(p>=1){it.seen=true;i++;show()}else raf=requestAnimationFrame(step)};step()};
+  const host=wins.reels||wins[Object.keys(wins)[0]];if(!host)return;const v=document.createElement('div');v.className='viewer';
+  v.innerHTML=`<div class="prog">${items.map(()=>'<i><b></b></i>').join('')}</div><div class="row" style="padding:0 12px"><b id="vn"></b><span style="flex:1"></span><button id="vx" style="font-size:22px;color:#fff">×</button></div><div class="stage" id="vs"></div>`;
+  host.appendChild(v);let i=start,raf,t0,last;
+  const show=()=>{if(i>=items.length){close();return}const it=items[i];$('#vn',v).textContent=it.n;const st=$('#vs',v);
+    const p=it.post&&POSTS[it.post];const vid=p&&p.mediaType==='video';
+    st.style.backgroundImage=it.url&&!vid?`url(${it.url})`:'';
+    st.innerHTML=`${vid?`<video src="${it.url}" autoplay playsinline loop style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain"></video>`:it.url?'':esc(it.e||'')}<p>${esc(it.t||'')}</p>${p?`<div class="vreact">${reactBar(p)}</div>`:''}`;
+    if(p)bindReacts(st);
+    $$('.prog b',v).forEach((b,j)=>b.style.width=j<i?'100%':'0');t0=last=performance.now();cancelAnimationFrame(raf);
+    const dur=vid?8000:4000;
+    const step=()=>{const n=performance.now();if($('.rbar.open',v))t0+=n-last;last=n;const pr=(n-t0)/dur;$$('.prog b',v)[i].style.width=Math.min(100,pr*100)+'%';if(pr>=1){it.seen=true;i++;show()}else raf=requestAnimationFrame(step)};step()};
   const close=()=>{cancelAnimationFrame(raf);v.remove();onDone&&onDone()};
-  $('#vx',v).onclick=close;$('#vs',v).onclick=()=>{items[i].seen=true;i++;show()};show();
+  $('#vx',v).onclick=close;$('#vs',v).onclick=e=>{if(e.target.closest('.rbar'))return;items[i].seen=true;i++;show()};show();
 }
 B.reels=b=>{
+  idxPosts();
   $$('[data-st]',b).forEach(x=>x.onclick=()=>showStory(STORIES,+x.dataset.st,()=>rerender('reels')));
   $$('[data-hl]',b).forEach(x=>x.onclick=()=>showStory(HL,+x.dataset.hl));
-  $$('[data-my]',b).forEach(x=>x.onclick=()=>showStory(S.stories.map(s=>({n:S.pet.name,url:s.url,t:s.t})),+x.dataset.my));
-  $$('[data-like]',b).forEach(x=>x.onclick=e=>{e.stopPropagation();const i=x.dataset.like;liked[i]=!liked[i];rerender('reels')});
-  $('#stFile',b).onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)storyComposer(f)};
+  $$('[data-my]',b).forEach(x=>x.onclick=()=>showStory(S.stories.map(s=>({n:(S.pet.name||'Você')+(s.vis==='public'?' · 🌎':' · 🔒'),url:s.url,t:s.t,post:s.id})),+x.dataset.my));
+  $$('[data-cst]',b).forEach(x=>x.onclick=()=>showStory(COMM.stories.map(s=>({n:`${s.petName||'Pet'} ${s.petEmoji||''}`,url:s.url,t:s.text,post:s.id})),+x.dataset.cst));
+  $$('[data-rt]',b).forEach(x=>x.onclick=()=>{reelTab=x.dataset.rt;rerender('reels')});
+  const rq=$('#rq',b);rq.oninput=()=>{clearTimeout(reelQT);reelQT=setTimeout(async()=>{reelQ=rq.value.trim();await loadCommunity();rerender('reels');const n=$('#rq');if(n){n.focus();n.setSelectionRange(n.value.length,n.value.length)}},450)};
+  $('#rRef',b).onclick=async()=>{await loadCommunity();rerender('reels')};
+  $('#stFile',b).onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)postComposer(f,'story')};
+  $('#rlFile',b).onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)postComposer(f,'reel')};
+  $$('[data-snd]',b).forEach(x=>x.onclick=e=>{e.stopPropagation();const vd=x.closest('.reel').querySelector('video');if(!vd)return;vd.muted=!vd.muted;x.textContent=vd.muted?'🔇':'🔊';if(!vd.muted)vd.play().catch(()=>{})});
+  $$('[data-vis]',b).forEach(x=>x.onclick=async e=>{e.stopPropagation();const p=POSTS[x.dataset.vis];if(!p)return;const vis=p.visibility==='public'?'private':'public';
+    try{if(SERVER&&ME&&!p.local){const d=await api(`/me/posts/${p.id}`,{method:'PATCH',body:{visibility:vis}});Object.assign(p,d.post)}else p.visibility=vis;
+      if(SERVER&&ME)await loadCommunity();else{COMM.reels=MYREELS.filter(r=>r.visibility==='public')}
+      rerender('reels');notify(vis==='public'?'Compartilhado 🌎':'Agora é privado 🔒',vis==='public'?'Todos da comunidade podem ver e reagir.':'Só você vê este reel.','reels',3000)}catch(err){notify('Não foi possível',err.message,'reels',3500)}});
+  $$('[data-del]',b).forEach(x=>x.onclick=async e=>{e.stopPropagation();const id=x.dataset.del;if(delAsk!==id){delAsk=id;rerender('reels');return}delAsk=null;
+    try{if(SERVER&&ME&&!POSTS[id]?.local)await api(`/me/posts/${id}`,{method:'DELETE'});MYREELS=MYREELS.filter(p=>p.id!==id);COMM.reels=COMM.reels.filter(p=>p.id!==id);idxPosts();rerender('reels')}catch(err){notify('Não foi possível apagar',err.message,'reels',3500)}});
+  bindReacts(b);
 };
 
 /* ---- AVENTURAS ---- */
@@ -1828,10 +1974,10 @@ function startVideo(){
    ========================================================= */
 const SLG=['linear-gradient(135deg,#ff6fa8,#ffb347)','linear-gradient(135deg,#3fa9ff,#74ebd5)','linear-gradient(135deg,#2ed8a3,#9be15d)','linear-gradient(135deg,#8b5cf6,#ff6fa8)','linear-gradient(135deg,#ffd93d,#ff9f43)','linear-gradient(135deg,#5b3aa8,#c26bd1)'];
 function loopItems(ch='stories'){
-  const mine=S.stories.map(s=>({n:S.pet.name+(s.vis==='public'?' · 🌎 comunidade':' · 🔒 só você'),url:s.url,t:s.t}));
-  const feed=(FEED||[]).map(s=>({n:`${s.petName||'Pet'} ${s.petEmoji||''}`,url:s.url,t:s.text}));
+  const mine=S.stories.map(s=>({n:(S.pet.name||'Você')+(s.vis==='public'?' · 🌎 comunidade':' · 🔒 só você'),url:s.url,video:s.mediaType==='video',t:s.t}));
+  const feed=(COMM.stories||[]).map(s=>({n:`${s.petName||'Pet'} ${s.petEmoji||''} · 🌎`,url:s.url,video:s.mediaType==='video',t:s.text}));
   const own=S.photo?[{n:S.pet.name,url:S.photo,t:`${S.pet.name} & ${S.tutor||'tutor'} 💜`}]:[];
-  if(ch==='reels')return REELS.map(r=>({n:r.u,e:r.e,t:r.c}));
+  if(ch==='reels')return [...(COMM.reels||[]).map(p=>({n:`${p.petName||'Pet'} ${p.petEmoji||''} · 🌎`,url:p.url,video:p.mediaType==='video',t:p.text})),...REELS.map(r=>({n:r.u+' · exemplo',e:r.e,t:r.c}))];
   if(ch==='aventuras')return HL.map(h=>({n:h.n,e:h.e,t:h.t})).concat(CIRC.map(c=>({n:c.n,e:c.e,t:c.lvl+' · '+c.m.length+' metas'})));
   return [...mine,...own,...feed,...STORIES.map(s=>({n:s.n+' · exemplo',e:s.e,t:s.t}))];
 }
@@ -1840,7 +1986,7 @@ function storyLoop(el,{ch='stories',dur=3200,onTV}={}){
   let items=loopItems(ch),i=0,t0=performance.now(),raf,alive=true;
   el.innerHTML=`<div class="sl-prog">${items.map(()=>'<i><b></b></i>').join('')}</div><span class="sl-live">● AO VIVO</span><div class="sl-stage" data-a></div><div class="sl-stage" data-b style="opacity:0"></div>`;
   let front=$('[data-a]',el),back=$('[data-b]',el);
-  const paint=(st,it,k)=>{st.style.backgroundImage=it.url?`url(${it.url})`:SLG[k%SLG.length];st.innerHTML=`${it.url?'':`<div class="pe">${it.e}</div>`}<div class="cap"><b>${esc(it.n)}</b>${esc(it.t||'')}</div>`};
+  const paint=(st,it,k)=>{st.style.backgroundImage=it.url&&!it.video?`url(${it.url})`:it.url?'':SLG[k%SLG.length];st.innerHTML=`${it.video?`<video src="${it.url}" muted autoplay loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video>`:it.url?'':`<div class="pe">${it.e}</div>`}<div class="cap"><b>${esc(it.n)}</b>${esc(it.t||'')}</div>`};
   paint(front,items[0],0);
   const step=()=>{if(!alive||!el.isConnected){alive=false;return}
     const p=(performance.now()-t0)/dur;const bars=$$('.sl-prog b',el);bars.forEach((b,j)=>b.style.width=j<i?'100%':j===i?Math.min(100,p*100)+'%':'0');
@@ -1878,7 +2024,7 @@ addEventListener('resize',()=>{const el=$('.slwrap.free');if(el){el.style.left=c
 let tvLoop=null,tvCh='stories';
 function tvOpen(){return !!$('#tv')}
 function openTV(){
-  if(SERVER&&ME)api('/feed/stories').then(d=>{FEED=d.stories||[]}).catch(()=>{});
+  if(SERVER&&ME)loadCommunity();
   if(tvOpen()){if(tvHidden())$('#tv').style.display='';return}const tv=document.createElement('div');tv.id='tv';
   tv.innerHTML=`<div class="tv-ant"><div class="tv-lights"><button class="c" id="tvC" title="Fechar"></button><button class="m" id="tvM" title="Minimizar"></button><button class="x" id="tvX" title="Maximizar"></button></div><i></i><i></i><em></em></div>
    <div class="tv-body"><div class="tv-row"><div class="tv-screen"><div class="sloop" id="tvLoop"></div></div>
@@ -1997,12 +2143,11 @@ function applyProfile(p){
   S.pet=Object.assign({},PDEF.pet,p.pet||{});S.chip=Object.assign({},PDEF.chip,p.chip||{});
 }
 async function loadAccount(){
-  applyProfile(PDEF);S.stories=[];FEED=[];
+  applyProfile(PDEF);S.stories=[];FEED=[];COMM.stories=[];COMM.reels=[];MYREELS=[];
   const {profile}=await api('/me/profile');if(profile)applyProfile(profile);
   if(!profile){S.tutor=ME.name||'';S.pet=Object.assign({},PDEF.pet,{name:'',breed:'',age:''})}
   S._hadPhoto=!!S.photo;
-  try{S.stories=(await api('/me/stories')).stories.map(x=>({id:x.id,url:x.url,t:x.text,vis:x.visibility}))}catch(e){}
-  try{FEED=(await api('/feed/stories')).stories||[]}catch(e){}
+  await loadCommunity();
   applyBg();if(deskOn){renderDesk(new Set(S.active));refreshAll()}
 }
 async function syncProfile(){
@@ -2054,28 +2199,38 @@ async function initServer(){
   try{const d=await api('/auth/me');if(d.user){ME=d.user;await loadAccount()}}catch(e){}
   buildHomeLoop();
 }
-function storyComposer(file){
-  loadPhoto(file,d=>{if(!d)return;let vis='private';
+function postComposer(file,kind){
+  const isVid=file.type.startsWith('video/');
+  if(isVid&&file.size>60*1024*1024){notify('Vídeo muito grande','O limite é 60 MB. Corte ou comprima o vídeo e tente de novo.','reels',4500);return}
+  const open=src=>{let vis='public';
     const w=document.createElement('div');w.className='modalwrap';document.body.appendChild(w);
-    w.innerHTML=`<div class="modal" style="width:min(440px,100%)"><h2>Novo story</h2>
-      <div class="photodrop" style="height:230px;background-image:url(${d});margin:12px 0;cursor:default"></div>
-      <div class="f"><label>Legenda</label><input id="stT" maxlength="140" value="Dia de aventura do ${esc(S.pet.name)} 🐾"></div>
-      <div class="f"><label>Quem pode ver?</label><div class="pick" id="stV"><button type="button" class="on" data-v="private">🔒 Só eu</button><button type="button" data-v="public">🌎 Comunidade</button></div></div>
-      <p class="mut" id="stH">Fica só na sua conta. Ninguém mais vê.</p>
+    w.innerHTML=`<div class="modal" style="width:min(460px,100%)"><h2>${kind==='reel'?'Novo reel':'Novo story'}</h2>
+      ${isVid?`<video src="${src}" controls playsinline style="width:100%;max-height:260px;border-radius:16px;background:#000;margin:12px 0"></video>`:`<div class="photodrop" style="height:240px;background-image:url(${src});margin:12px 0;cursor:default"></div>`}
+      <div class="f"><label>Legenda</label><input id="stT" maxlength="220" value="${kind==='reel'?'':`Dia de aventura do ${esc(S.pet.name||'meu pet')} 🐾`}" placeholder="Conte o que está acontecendo… use palavras que ajudem na busca"></div>
+      <div class="f"><label>Quem pode ver?</label><div class="pick" id="stV"><button type="button" class="on" data-v="public">🌎 Comunidade</button><button type="button" data-v="private">🔒 Só eu</button></div></div>
+      <p class="mut" id="stH">Todos os tutores do APPET podem ver e reagir. Você pode tornar privado depois.</p>
       <div class="mact"><button class="btn g" id="stC">Cancelar</button><button class="btn p" id="stP">Publicar</button></div></div>`;
     $$('#stV button',w).forEach(b=>b.onclick=()=>{vis=b.dataset.v;$$('#stV button',w).forEach(x=>x.classList.toggle('on',x===b));
-      $('#stH',w).textContent=vis==='public'?'Aparece na APPeTV e nos stories de outros tutores.':'Fica só na sua conta. Ninguém mais vê.'});
+      $('#stH',w).textContent=vis==='public'?'Todos os tutores do APPET podem ver e reagir. Você pode tornar privado depois.':'Fica só na sua conta. Ninguém mais vê.'});
     $('#stC',w).onclick=()=>w.remove();
     $('#stP',w).onclick=async()=>{const t=$('#stT',w).value.trim();const btn=$('#stP',w);btn.disabled=true;btn.textContent='Enviando…';
       try{
-        if(SERVER&&ME){const r=await api('/me/stories',{method:'POST',body:{image:d,text:t,visibility:vis}});S.stories.unshift({id:r.story.id,url:r.story.url,t:r.story.text,vis:r.story.visibility})}
-        else S.stories.unshift({url:d,t,vis});
-        w.remove();rerender('reels');
-        if(!S.storyXP){S.storyXP=1;addXP(10,'Primeiro story publicado!')}
-        notify('Story publicado',vis==='public'?'Visível para a comunidade 🌎':'Só você vê 🔒','reels',3000);
+        let post;
+        if(SERVER&&ME){
+          const blob=isVid?file:await (await fetch(src)).blob();
+          const qs=new URLSearchParams({kind,visibility:vis,text:t});
+          const r=await fetch('/api/me/posts?'+qs,{method:'POST',credentials:'same-origin',headers:{'content-type':blob.type||'application/octet-stream'},body:blob});
+          const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||('Erro '+r.status));post=d.post;
+        }else post={id:'loc'+Date.now(),local:true,kind,url:src,mediaType:isVid?'video':'image',text:t,visibility:vis,petName:S.pet.name,petEmoji:S.pet.emoji,createdAt:new Date().toISOString(),mine:true,reactions:{},myReaction:null};
+        if(kind==='story')S.stories.unshift(asStory(post));
+        else{MYREELS.unshift(post);if(vis==='public')COMM.reels.unshift(post);reelTab=vis==='public'?'comunidade':'meus'}
+        idxPosts();w.remove();rerender('reels');
+        if(!S.storyXP){S.storyXP=1;addXP(10,kind==='reel'?'Primeiro reel publicado!':'Primeiro story publicado!')}
+        notify(kind==='reel'?'Reel publicado':'Story publicado',vis==='public'?'Compartilhado com a comunidade 🌎':'Só você vê 🔒','reels',3000);
       }catch(e){btn.disabled=false;btn.textContent='Publicar';notify('Não foi possível publicar',e.message,'reels',4500)}
     };
-  });
+  };
+  if(isVid)open(URL.createObjectURL(file));else loadPhoto(file,d=>{if(d)open(d)});
 }
 
 /* ---------------- BOOT ---------------- */
