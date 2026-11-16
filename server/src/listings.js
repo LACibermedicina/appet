@@ -84,6 +84,31 @@ export function listingsRouter() {
     res.json({ ok: true });
   });
 
+  /* ---- placar da Academia: XP real dos tutores (só nome, pet e XP) ---- */
+  r.get('/board', (req, res) => {
+    const rows = Object.entries(db().profiles || {}).map(([uid, p]) => ({ uid, xp: +(p?.state?.xp) || 0 }))
+      .filter(x => x.xp > 0 && store.user(x.uid)).sort((a, b) => b.xp - a.xp).slice(0, 10)
+      .map(x => ({ ...userCard(x.uid), xp: x.xp, me: req.user?.id === x.uid }));
+    res.json({ board: rows });
+  });
+
+  /* ---- PetMatch real: dar pata; se for recíproco, é match ---- */
+  r.post('/listings/:id/like', requireAuth, (req, res) => {
+    const target = db().listings.find(l => l.id === req.params.id && l.type === 'match');
+    if (!target || target.userId === req.user.id) return res.sendStatus(404);
+    const mine = db().listings.find(l => l.userId === req.user.id && l.type === 'match');
+    if (!mine) return res.status(400).json({ error: 'Coloque seu pet no PetMatch primeiro.' });
+    mine.likes = [...new Set([...(mine.likes || []), target.id])];
+    const match = (target.likes || []).includes(mine.id);
+    store.save(); res.json({ match, with: match ? listingOut(target, req.user.id) : null });
+  });
+  r.get('/me/matches', requireAuth, (req, res) => {
+    const mine = db().listings.find(l => l.userId === req.user.id && l.type === 'match');
+    if (!mine) return res.json({ matches: [] });
+    const out = db().listings.filter(l => l.type === 'match' && (mine.likes || []).includes(l.id) && (l.likes || []).includes(mine.id));
+    res.json({ matches: out.map(l => listingOut(l, req.user.id)) });
+  });
+
   /* ---- serviços contratados (agendamentos, estadias, pedidos, consultas) ---- */
   const KINDS = ['booking', 'stay', 'order', 'consult', 'event'];
   r.get('/me/services', requireAuth, (req, res) => {

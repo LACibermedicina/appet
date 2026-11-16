@@ -157,7 +157,11 @@ export function authRouter() {
     const m = store.media(req.params.id);
     if (!m) return res.sendStatus(404);
     if (m.public) { res.setHeader('Cache-Control', 'public, max-age=86400'); return res.type(m.type).sendFile(path.join(UPLOADS, m.file)); }
-    if (!req.user) return res.status(401).json({ error: 'Entre na sua conta para continuar.' });
+    if (!req.user) {
+      const pub = store.get().stories.some(s => s.mediaId === m.id && s.visibility === 'public');
+      if (!pub) return res.status(401).json({ error: 'Entre na sua conta para continuar.' });
+      res.setHeader('Cache-Control', 'private, max-age=600'); return res.type(m.type).sendFile(path.join(UPLOADS, m.file));
+    }
     const ok = m.ownerId === req.user.id || store.get().stories.some(s => s.mediaId === m.id && store.canSee(s, req.user.id));
     if (!ok) return res.sendStatus(404);
     res.setHeader('Cache-Control', 'private, max-age=3600');

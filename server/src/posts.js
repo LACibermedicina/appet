@@ -94,12 +94,14 @@ export function postsRouter() {
   });
 
   // comunidade: tudo que o leitor pode ver (público, amigos próximos, grupos dele e os próprios compartilhados), com busca
-  r.get('/feed', requireAuth, (req, res) => {
+  // visitantes (sem conta) veem só o que foi publicado para todos
+  r.get('/feed', (req, res) => {
     const kind = req.query.kind, q = norm(req.query.q).trim();
     const limit = Math.min(Number(req.query.limit) || 60, 200);
-    const list = all().filter(p => p.visibility !== 'private' && canSee(p, req.user.id) && (!kind || kindOf(p) === kind)
+    const uid = req.user?.id;
+    const list = all().filter(p => p.visibility !== 'private' && (uid ? canSee(p, uid) : p.visibility === 'public') && (!kind || kindOf(p) === kind)
       && (!q || norm(`${p.text} ${p.petName}`).includes(q))).slice(0, limit);
-    res.json({ posts: list.map(p => postOut(p, req.user.id)) });
+    res.json({ posts: list.map(p => postOut(p, uid)) });
   });
 
   r.patch('/me/posts/:id', requireAuth, json, (req, res) => {

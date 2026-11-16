@@ -54,7 +54,9 @@ try {
   ok((await B('GET', publico.url)).status === 200, 'Beto abre a imagem do story público');
   ok((await A('GET', fotoA)).status === 200, 'Ana abre a própria foto');
   ok((await B('DELETE', `/api/me/stories/${publico.id}`)).status === 404, 'Beto não apaga story da Ana');
-  ok((await anon('GET', publico.url)).status === 401, 'sem login nenhuma imagem abre');
+  ok((await anon('GET', privado.url)).status === 401 && (await anon('GET', fotoA)).status === 401, 'sem login, nada privado abre (nem story privado, nem foto de perfil)');
+  ok((await anon('GET', publico.url)).status === 200, 'visitante vê a imagem do que foi publicado para todos');
+  ok((await anon('GET', '/api/feed?kind=story')).data.posts.every(p => p.visibility === 'public'), 'visitante vê só posts públicos na comunidade');
 
   ok((await A('PATCH', `/api/me/stories/${publico.id}`, { visibility: 'private' })).status === 200, 'Ana torna o story privado');
   ok((await B('GET', '/api/feed/stories')).data.stories.length === 0, 'e ele some da comunidade');
@@ -159,6 +161,15 @@ try {
   await C('POST', '/api/me/listings', { type: 'match', data: { petName: 'Rex', breed: 'SRD', bio: 'brincalhão' } });
   ok((await A('GET', '/api/listings?type=match')).data.listings.length === 1, 'cada tutor tem um só perfil no PetMatch');
   ok((await A('DELETE', `/api/me/listings/${pro.id}`)).status === 404, 'ninguém apaga o cadastro de outra pessoa');
+  await A('PUT', '/api/me/profile', { state: { xp: 77 } });
+  const brd = (await A('GET', '/api/board')).data.board;
+  ok(brd.some(x => x.xp === 77 && x.me) && !JSON.stringify(brd).includes('@'), 'placar mostra XP real sem e-mail');
+  const mC = (await C('GET', '/api/listings?type=match')).data.listings[0];
+  ok((await A('POST', `/api/listings/${mC.id}/like`)).status === 400, 'precisa ter o próprio pet no PetMatch para dar pata');
+  const mA = (await A('POST', '/api/me/listings', { type: 'match', data: { petName: 'Thor' } })).data.listing;
+  ok((await A('POST', `/api/listings/${mC.id}/like`)).data.match === false, 'pata de um lado só ainda não é match');
+  ok((await C('POST', `/api/listings/${mA.id}/like`)).data.match === true, 'quando o outro tutor também dá pata, vira match');
+  ok((await A('GET', '/api/me/matches')).data.matches[0]?.data?.petName === 'Rex' && (await B('GET', '/api/me/matches')).data.matches.length === 0, 'o match aparece só para os dois');
   const svc = (await A('POST', '/api/me/services', { kind: 'booking', title: 'Consulta', listingId: pro.id, when: 'Sex 10:00', price: 150 })).data.service;
   ok(svc.with === 'Dr. Beto', 'Ana agenda com o veterinário real');
   ok((await A('GET', '/api/me/services')).data.services.length === 1, 'o serviço contratado aparece para a Ana');
