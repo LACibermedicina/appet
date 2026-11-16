@@ -708,6 +708,26 @@ body.hasphoto .deskhello{background:none;backdrop-filter:none;box-shadow:none;pa
 .lside{display:flex;flex-direction:column;gap:8px;min-height:0}
 .lchat{flex:1;min-height:120px;overflow:auto;background:#faf8ff;border-radius:14px;padding:10px;font-size:13px;display:flex;flex-direction:column;gap:5px}
 .lreact{display:flex;gap:4px;justify-content:space-between}.lreact button{transition:transform .15s}.lreact button:hover{transform:scale(1.2)}
+
+/* ---- guia passo a passo e quadros móveis ---- */
+#tour{position:fixed;inset:0;z-index:200;pointer-events:none}
+#tour .tspot{position:fixed;border-radius:16px;box-shadow:0 0 0 9999px rgba(25,12,60,.45),0 0 0 3px #fff,0 0 24px 6px rgba(139,92,246,.8);transition:all .35s cubic-bezier(.3,1.2,.4,1);pointer-events:none;animation:tpulse 1.6s infinite}
+#tour.noel .tspot{left:50%!important;top:50%!important;width:0!important;height:0!important}
+@keyframes tpulse{50%{box-shadow:0 0 0 9999px rgba(25,12,60,.45),0 0 0 5px #fff,0 0 34px 10px rgba(255,111,168,.8)}}
+#tour .tbub{position:fixed;width:300px;background:#fff;border-radius:18px;padding:14px 16px;box-shadow:0 20px 50px rgba(30,10,80,.35);pointer-events:auto;transition:left .3s,top .3s;animation:popIn .3s}
+#tour .tbub b{font-size:16px;display:block;margin:4px 0}#tour .tbub p{font-size:13.5px;color:var(--ink2);line-height:1.45}
+.tstep{font-size:11px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.05em}
+.tact{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:12px}.tact #tSkip{margin-right:auto}
+.wg{background:rgba(255,255,255,.38);backdrop-filter:blur(14px) saturate(1.4);transition:background .35s,box-shadow .35s,transform .15s;touch-action:none}
+body.haswin .wg,body.haswin .wg.w-hello{background:rgba(255,255,255,.9);box-shadow:0 10px 30px rgba(40,20,90,.2)}
+body.haswin .wg.w-live{background:linear-gradient(110deg,#ff4d6d,#ff9f43)}
+.wg.w-hello{background:rgba(255,255,255,.3);backdrop-filter:blur(10px);padding:12px 14px;box-shadow:none}
+.wfree{position:fixed!important;z-index:2;margin:0!important}
+.wdrag{z-index:60!important;cursor:grabbing!important;transform:scale(1.03) rotate(-.6deg)!important;box-shadow:0 22px 50px rgba(40,20,90,.3)!important}
+.dicon.wfree{width:auto;background:none!important}
+.w-hello .quickprompt{width:100%;max-width:100%;box-sizing:border-box;margin:0}
+.wbtn{font-size:12px;font-weight:700;background:rgba(255,255,255,.7);border-radius:99px;padding:4px 9px;color:var(--violet)}
+.wbtn:hover{background:#fff}
 </style>
 </head>
 <body>
@@ -1161,23 +1181,22 @@ function enterDesk(){
   renderDesk(before);
   const firstEntry=!wasOn,fold=pendingFolder;pendingFolder=null;
   setTimeout(()=>{
-    if(fold){openFolder(fold,$(`#icons [data-g="${fold}"]`));return}
-    if(firstEntry&&!list.length)openTV();
-    else if(list[0])openApp(list[0]);
-    if(!text)return;
+    if(fold){openFolder(fold,$(`.dicon[data-g="${fold}"]`));return}
+    if(!text){if(firstEntry)openTV();return}
     const pn=S.pet.name;const knew=[pn&&('o pet se chama '+pn),S.pet.breed,S.pet.age].filter(Boolean);
-    const names=list.map(i=>APPS[i].n);
-    const reply=`${knew.length?'Anotei: '+knew.join(', ')+'. ':''}${names.length?`Abri ${names.join(', ')}. ${TIPS[list[0]]||''}`:'Montei seu espaço. Use a busca (⌘K) para pedir qualquer coisa.'}`;
-    notify('Pronto! Seu APPET está configurado',reply+(knew.length?' Para corrigir, toque aqui.':''),knew.length?'perfil':(list[0]||'dashboard'),9000);
+    if(knew.length)notify('Seu APPET está configurado','Anotei: '+knew.join(', ')+'. Para corrigir, toque aqui.','perfil',7000);
+    startGuide(list,text);
   },deskOn?50:500);
 }
 function renderDesk(before=new Set()){
-  const dh=$('#deskhello');const oldReel=$('.wg.w-reel',dh);
+  const dh=$('#deskhello');const oldReel=$('[data-w="reel"]');if(oldReel)oldReel.remove();
+  $$('#desk > .wfree[data-w]').forEach(x=>x.remove());
   dh.innerHTML=deskWidgets();
-  const nr=$('.wg.w-reel',dh);if(oldReel&&nr&&oldReel.dataset.post===nr.dataset.post)nr.replaceWith(oldReel);
+  const nr=$('.wg.w-reel',dh);if(oldReel&&nr&&oldReel.dataset.post===nr.dataset.post){nr.replaceWith(oldReel)}
   bindWidgets(dh);
-  $('#icons').innerHTML=GROUPS.map((g,k)=>`<button class="dicon" data-g="${g.id}" style="animation-delay:${before.size?0:k*.07}s;${before.size?'animation:none':''}">${gIcon(g)}<span>${g.n}</span></button>`).join('');
-  $$('#icons .dicon').forEach(b=>b.onclick=e=>{e.stopPropagation();$('#folder')&&$('#folder').dataset.g===b.dataset.g?closeFolder():(openFolder(b.dataset.g,b),$('#folder').dataset.g=b.dataset.g)});
+  $('#icons').innerHTML=GROUPS.map((g,k)=>`<button class="dicon" data-w="ic_${g.id}" data-g="${g.id}" style="animation-delay:${before.size?0:k*.07}s;${before.size?'animation:none':''}">${gIcon(g)}<span>${g.n}</span></button>`).join('');
+  $$('#icons .dicon').forEach(b=>{b.onclick=e=>{e.stopPropagation();$('#folder')&&$('#folder').dataset.g===b.dataset.g?closeFolder():(openFolder(b.dataset.g,b),$('#folder').dataset.g=b.dataset.g)};makeDraggable(b,b.dataset.w)});
+  $$('#deskhello [data-w], #icons [data-w]').forEach(w=>{if(WPOS[w.dataset.w]){$('#desk').appendChild(w)}});applyWPos($('#desk'));
   const running=Object.keys(wins).concat(tvOpen()?['appetv']:[]);
   const recent=[...new Set([...running,...S.active])].filter(id=>APPS[id]).slice(0,7);
   $('#dock').innerHTML=GROUPS.map(g=>`<button class="dk grpk" data-g="${g.id}">${gIcon(g)}<span class="tip">${g.n}</span><span class="dot"></span></button>`).join('')+(recent.length?'<div class="dsep"></div>'+recent.map(dk).join(''):'');
@@ -1294,7 +1313,7 @@ const MENUS={
  appet:[[()=>SERVER?(ME?`Sair da conta (${ME.email})`:'Entrar na conta'):'Apagar meus dados deste aparelho',accountAction],'-',['Sobre o APPET',()=>notify('APPET','Protótipo interativo: dados e IA são simulados nesta versão.','dashboard',5000)],['Ficha do pet (foto, chip)…',()=>openApp('perfil')],['Refazer perfil guiado…',()=>{pendingPrompt={ids:[],text:''};openOnboarding([], '');}],'-',['Voltar à tela inicial',()=>location.reload()],['Reiniciar demonstração',()=>{try{localStorage.removeItem('appet-profile')}catch(e){};location.reload()}]],
  arquivo:[['Nova busca…',openSpot,'⌘K'],['Amigos próximos e grupos…',()=>openCircles()],['Novo story',()=>openApp('reels')],['Registrar treino',()=>openApp('adestra')]],
  janela:[['Minimizar todas',()=>Object.values(wins).forEach(w=>w.style.display='none')],['Fechar todas',()=>Object.keys(wins).forEach(closeApp)],'-',...ORDER.map(id=>[APPS[id].e+'  '+APPS[id].n,()=>openApp(id)])],
- ajuda:[['Como funciona o InterAKão',()=>openApp('interakao')],['Atalhos: ⌘K busca, duplo clique amplia janela',()=>{}]]
+ ajuda:[['🧭 Guia passo a passo: onde encontro…?',()=>askGuide()],['Tour geral do APPET',()=>startGuide([],'')],['Reorganizar quadros do fundo',()=>resetWidgets()],['Como funciona o InterAKão',()=>openApp('interakao')],['Atalhos: ⌘K busca, duplo clique amplia janela',()=>{}]]
 };
 $$('.menubar [data-menu]').forEach(m=>m.onclick=e=>{
   e.stopPropagation();const open=$('.drop');if(open){open.remove();$$('.mi.open').forEach(x=>x.classList.remove('open'));if(open.dataset.m===m.dataset.menu)return}
@@ -1365,6 +1384,118 @@ function stopAppStuff(id){if(id==='lives'&&LIVES.cur)endLive(true);if(id==='poet
    APP RENDERERS (R) & BINDERS (B)
    ========================================================= */
 const R={},B={};
+/* =========================================================
+   GUIA PASSO A PASSO: mostra onde fica a solução dentro do APPET
+   ========================================================= */
+const GUIDE={
+ dashboard:['.wb .grid','Aqui está o resumo do seu pet: saúde, rotina, serviços e treino.'],
+ saude:['#vacF','Cadastre a vacina e a data da próxima dose. O APPET avisa antes de vencer.'],
+ rotina:['#foodF, .wb .grid','Informe a ração e os horários. O estoque é calculado sozinho.'],
+ perfil:['#chipCard, .wb','Na ficha ficam a foto, o microchip e o RG do pet.'],
+ reels:['#rlFile, #stFile, .wb','Poste um story ou reel, ou assista e reaja aos da comunidade.'],
+ lives:['#lNew','Escreva um título e toque em “Começar live”. Quem está ao vivo aparece logo abaixo.'],
+ appetv:['#tv','A APPeTV passa os stories em loop. Arraste, minimize ou maximize.'],
+ match:['#deck, #mJoin','Dê pata nos pets de que gostar. Se o outro tutor também der, vira match.'],
+ eventos:['[data-ev], #newEv','Confirme presença num evento ou crie o seu.'],
+ aventuras:['#joinCh, .wb','Entre nos circuitos e desafios e acompanhe o antes e depois.'],
+ adestra:['[data-train], #lessons, .wb','Escolha um comando e comece uma sessão curta de treino.'],
+ academia:['#lessons, [data-t], .wb','Siga as trilhas de aprendizado e ganhe XP a cada lição.'],
+ interakao:['#mic','Grave o latido do seu pet (ou use um som de exemplo) para a IA traduzir.'],
+ consulta:['#cIn, #cForm','Descreva o que está acontecendo. A IA orienta e, se precisar, inicia uma videoconsulta.'],
+ poetia:['[data-snd], .wb','Sons calmos e poesia para momentos de ansiedade (fogos, viagens, solidão).'],
+ servicos:['[data-bk], #beProBtn','Escolha o profissional e toque em “Agendar”. O que contratar aparece no fundo da tela.'],
+ petsurf:['[data-stay], #hostT','Peça estadia a um anfitrião ou cadastre-se para cuidar de outros pets.'],
+ loja:['[data-add], .wb','Adicione produtos ao carrinho e pague com Link, créditos ou Pix.'],
+ brecho:['[data-bi], [data-mt], .wb','Compre itens usados ou anuncie os seus.'],
+ carteira:['[data-buy], .wb','Compre créditos, impulsione anúncios e veja seu extrato.'],
+};
+let TOUR=null;
+function tourEnd(){if(!TOUR)return;TOUR.el.remove();document.removeEventListener('click',TOUR.onDoc,true);removeEventListener('resize',TOUR.place);TOUR=null}
+function tourStart(steps,{title}={}){
+  tourEnd();if(!steps.length)return;
+  const el=document.createElement('div');el.id='tour';el.innerHTML='<div class="tspot"></div><div class="tbub"></div>';document.body.appendChild(el);
+  TOUR={el,steps,i:0,title};
+  TOUR.place=()=>tourShow();
+  TOUR.onDoc=e=>{if(!TOUR)return;const st=TOUR.steps[TOUR.i];if(e.target.closest('.tbub'))return;
+    const t=st.target&&st.target();if(st.click&&t&&t.contains(e.target)){setTimeout(()=>tourGo(TOUR&&TOUR.i+1),st.wait||450)}};
+  document.addEventListener('click',TOUR.onDoc,true);addEventListener('resize',TOUR.place);
+  tourShow();
+}
+function tourGo(i){if(!TOUR)return;if(i>=TOUR.steps.length){tourEnd();return}TOUR.i=i;tourShow()}
+function tourShow(){
+  if(!TOUR)return;const st=TOUR.steps[TOUR.i];const el=TOUR.el;const spot=$('.tspot',el),bub=$('.tbub',el);
+  if(st.before)try{st.before()}catch(e){}
+  let t=st.target&&st.target();
+  if(!t||!t.getBoundingClientRect().width){if(st.retry!==false&&(st._tries=(st._tries||0)+1)<12){setTimeout(tourShow,200);return}t=null}
+  st._tries=0;
+  const n=TOUR.steps.length,last=TOUR.i===n-1;
+  bub.innerHTML=`<div class="tstep">${TOUR.title?esc(TOUR.title)+' · ':''}passo ${TOUR.i+1} de ${n}</div><b>${st.h}</b><p>${st.p}</p>
+    <div class="tact"><button class="btn g sm" id="tSkip">${last?'Fechar':'Pular guia'}</button>${TOUR.i?'<button class="btn s sm" id="tBack">Voltar</button>':''}${st.click&&t?'<span class="mut" style="font-size:12px">👆 toque no destaque</span>':`<button class="btn p sm" id="tNext">${last?'Entendi!':'Próximo'}</button>`}</div>`;
+  $('#tSkip',bub).onclick=tourEnd;const bk=$('#tBack',bub);if(bk)bk.onclick=()=>tourGo(TOUR.i-1);const nx=$('#tNext',bub);if(nx)nx.onclick=()=>{st.next&&st.next();tourGo(TOUR.i+1)};
+  if(t){const r=t.getBoundingClientRect(),pad=6;el.classList.remove('noel');
+    Object.assign(spot.style,{left:r.left-pad+'px',top:r.top-pad+'px',width:r.width+pad*2+'px',height:r.height+pad*2+'px'});
+    const bw=300;let x=r.left+r.width/2-bw/2,y=r.bottom+14;if(y+190>innerHeight)y=r.top-200;if(y<36){y=clamp(r.top,40,innerHeight-220);x=r.right+14;if(x+bw>innerWidth)x=r.left-bw-14}
+    bub.style.left=clamp(x,10,innerWidth-bw-10)+'px';bub.style.top=clamp(y,36,innerHeight-210)+'px';
+  }else{el.classList.add('noel');bub.style.left=(innerWidth/2-150)+'px';bub.style.top=(innerHeight/2-100)+'px'}
+}
+/* monta o caminho: grupo → app → onde clicar dentro dele */
+function guideTo(id,text){
+  const g=groupOf(id);const a=APPS[id];const gd=GUIDE[id]||['.wb',TIPS[id]||''];
+  const inWin=()=>{const w=wins[id]||(id==='appetv'?$('#tv'):null);if(!w)return null;for(const sel of gd[0].split(',')){const x=sel.trim()==='#tv'?$('#tv'):$(sel.trim(),w);if(x&&x.getBoundingClientRect().width)return x}return w};
+  const steps=[];
+  if(g&&!wins[id])steps.push({target:()=>$(`.dicon[data-g="${g.id}"]`),h:`1. Abra o grupo ${g.e} ${g.n}`,p:`${a.n} fica dentro de ${g.n}, junto com ${g.apps.filter(x=>x!==id).map(x=>APPS[x].n).slice(0,3).join(', ')}.`,click:true,before:()=>{closeFolder()}});
+  if(g&&!wins[id])steps.push({target:()=>$(`#folder .fapp[data-id="${id}"]`),h:`2. Toque em ${a.e} ${a.n}`,p:a.d+'.',click:true,wait:650,before:()=>{if(!$('#folder'))openFolder(g.id,$(`.dicon[data-g="${g.id}"]`))}});
+  steps.push({target:inWin,h:`${steps.length+1}. É aqui`,p:gd[1],before:()=>{if(!wins[id]&&!(id==='appetv'&&tvOpen())){closeFolder();openApp(id)}}});
+  return steps;
+}
+function guideIntro(){return [
+  {target:()=>$('#icons'),h:'Tudo fica em 5 grupos',p:'Meu Pet, Comunidade, Aprender, Serviços e Compras. Toque num grupo para ver as funções dele.'},
+  {target:()=>$('#deskhello'),h:'O essencial fica no fundo',p:'Pet, tutor, serviços contratados e lembretes. Arraste os quadros para onde preferir.'},
+  {target:()=>$('#qp')||$('#mbSearch'),h:'Pergunte quando quiser',p:'Escreva o que precisa (⌘K) e o APPET mostra o caminho passo a passo.'},
+]}
+function startGuide(ids,text){
+  const list=(ids||[]).filter(id=>APPS[id]);
+  if(!list.length){tourStart(guideIntro(),{title:'Conheça o APPET'});return}
+  const steps=guideTo(list[0],text);
+  if(list[1])steps.push({target:()=>$(`#dock .dk[data-id="${list[1]}"]`)||$(`.dicon[data-g="${groupOf(list[1])?.id}"]`),h:`Também pode ajudar: ${APPS[list[1]].e} ${APPS[list[1]].n}`,p:(TIPS[list[1]]||APPS[list[1]].d)+' Fica em '+(groupOf(list[1])?.n||'')+'.',retry:false});
+  tourStart(steps,{title:'Seu caminho'});
+}
+function askGuide(){
+  const w=document.createElement('div');w.className='modalwrap';document.body.appendChild(w);
+  w.innerHTML=`<div class="modal" style="width:min(480px,100%)"><h2>Como posso ajudar?</h2><p class="m">Escreva com suas palavras. Eu mostro, passo a passo, onde resolver.</p>
+   <form id="agF" class="row"><input id="agI" style="flex:1;border:1px solid var(--line);border-radius:12px;padding:10px 12px" placeholder="Ex.: quero agendar banho, meu pet tem medo de fogos…" autofocus><button class="btn p">Me guie</button></form>
+   <div class="row" style="flex-wrap:wrap;gap:6px;margin-top:10px">${['Agendar banho','Vacinas','Fazer uma live','Treinar o pet','Vender um item'].map(x=>`<button class="chip" data-ag="${x}">${x}</button>`).join('')}</div>
+   <div class="mact"><button class="btn g sm" id="agX">Fechar</button><button class="btn s sm" id="agTour">Tour geral</button></div></div>`;
+  const go=v=>{w.remove();const ids=route(v);startGuide(ids.filter(i=>APPS[i]).length?ids:[],v)};
+  $('#agF',w).onsubmit=e=>{e.preventDefault();const v=$('#agI',w).value.trim();if(v)go(v)};
+  $$('[data-ag]',w).forEach(b=>b.onclick=()=>go(b.dataset.ag));
+  $('#agX',w).onclick=()=>w.remove();$('#agTour',w).onclick=()=>{w.remove();startGuide([],'')};
+}
+
+/* =========================================================
+   QUADROS DO FUNDO: arrastáveis, translúcidos; ficam mais opacos quando há janela aberta
+   ========================================================= */
+let WPOS={};try{WPOS=JSON.parse(localStorage.getItem('appet-wpos')||'{}')}catch(e){}
+const saveWPos=()=>{try{localStorage.setItem('appet-wpos',JSON.stringify(WPOS))}catch(e){}};
+function applyWPos(root){
+  $$('[data-w]',root).forEach(w=>{const p=WPOS[w.dataset.w];if(p){w.classList.add('wfree');w.style.left=clamp(p.x,0,innerWidth-80)+'px';w.style.top=clamp(p.y,32,innerHeight-60)+'px';if(p.w)w.style.width=p.w+'px'}else{w.classList.remove('wfree');w.style.left=w.style.top=w.style.width=''}});
+}
+function makeDraggable(w,key,{onDrop}={}){
+  let sx,sy,ox,oy,drag=false,id=null;
+  w.addEventListener('pointerdown',e=>{if(e.button!==0||e.target.closest('input,textarea,select,video[controls]'))return;
+    sx=e.clientX;sy=e.clientY;const r=w.getBoundingClientRect();ox=r.left;oy=r.top;drag=false;id=e.pointerId;
+    const mv=ev=>{if(ev.pointerId!==id)return;const dx=ev.clientX-sx,dy=ev.clientY-sy;
+      if(!drag&&Math.hypot(dx,dy)>6){drag=true;try{w.setPointerCapture(id)}catch(_){}
+        const width=r.width;w.classList.add('wfree','wdrag');w.style.width=width+'px';w.style.left=ox+'px';w.style.top=oy+'px';if(w.parentElement.id==='deskhello'||w.parentElement.id==='icons')document.getElementById('desk').appendChild(w)}
+      if(drag){w.style.left=clamp(ox+dx,0,innerWidth-60)+'px';w.style.top=clamp(oy+dy,30,innerHeight-50)+'px'}};
+    const up=ev=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);
+      if(drag){w.classList.remove('wdrag');WPOS[key]={x:parseFloat(w.style.left),y:parseFloat(w.style.top),w:parseFloat(w.style.width)||undefined};saveWPos();
+        const stop=c=>{c.stopPropagation();c.preventDefault();w.removeEventListener('click',stop,true)};w.addEventListener('click',stop,true);setTimeout(()=>w.removeEventListener('click',stop,true),50);onDrop&&onDrop()}};
+    addEventListener('pointermove',mv);addEventListener('pointerup',up)});
+}
+function resetWidgets(){WPOS={};saveWPos();$$('#desk > .wfree[data-w]').forEach(x=>x.remove());renderDesk(new Set(S.active));notify('Quadros organizados','Voltaram para o lugar original.','dashboard',2500)}
+setInterval(()=>{document.body.classList.toggle('haswin',Object.keys(wins).some(k=>wins[k]&&!wins[k].classList.contains('min'))||(typeof tvOpen==='function'&&tvOpen()))},300);
+
 /* =========================================================
    GRUPOS: 5 portas de entrada em vez de 20 ícones
    ========================================================= */
@@ -1448,18 +1579,20 @@ function deskWidgets(){
   const pn=S.pet.name||'Seu pet';const svc=(S.services||[]).filter(x=>x.status!=='cancelado');const rm=reminders();
   const rl=latestReel();const lv=(LIVES.list||[]).filter(l=>!l.mine);
   const facts=[S.pet.breed,S.pet.age,S.pet.energy&&('energia '+S.pet.energy.toLowerCase())].filter(Boolean).join(' · ');
-  return `<div class="wg w-hello"><h3>${sd}${S.tutor?', '+esc(S.tutor):''}!</h3><div class="quickprompt" id="qp"><span>🔍 O que você precisa agora?</span><kbd>⌘K</kbd></div></div>
-   ${S.lost?'<div class="wg w-alert" data-open="perfil">🚨 <b>Alerta de pet perdido ativo</b><br><span>Toque para ver a ficha</span></div>':''}
-   ${lv.length?`<div class="wg w-live" data-open="lives"><span class="ldot"></span><b>${lv.length===1?esc(lv[0].petName||lv[0].host?.name||'Alguém')+' está ao vivo':lv.length+' lives agora'}</b><span>Assistir →</span></div>`:''}
-   <div class="wg w-pet" data-open="perfil"><div class="wav">${S.photo?`<img src="${S.photo}" alt="">`:S.pet.emoji}</div><div class="grow"><b>${esc(pn)}</b><div class="mut">${esc(facts)||'Toque para completar a ficha'}</div>${hasChip()?`<div class="mut">🔖 ${chipShort(S.chip.num)}${S.chip.rg?' · RG '+esc(S.chip.rg):''}</div>`:''}</div></div>
-   <div class="wg w-tutor" data-open="${SERVER&&!ME?'__login':'carteira'}"><div class="grow"><b>${lvlName()} · Nv ${lvl()}</b><div class="xp"><i style="width:${(S.xp%200)/2}%"></i></div><div class="mut">${S.xp} XP${S.streak?' · 🔥 '+S.streak+' dias':''} · ${S.credits||0} créditos</div></div><span class="pill ${ME?'ok':'b'}">${ME?'Conta':SERVER?'Visitante · entrar':'Neste aparelho'}</span></div>
-   <div class="wg w-svc" data-open="servicos"><b class="wt">📅 Serviços contratados</b>${svc.length?svc.slice(0,3).map(x=>`<div class="wl"><span>${x.emoji||'📌'}</span><div class="grow"><b>${esc(x.title)}</b><small>${esc(x.with)}${x.when?' · '+esc(x.when):''}</small></div></div>`).join(''):'<div class="mut">Nada contratado. Toque para ver profissionais.</div>'}</div>
-   ${rm.length?`<div class="wg w-rem"><b class="wt">🔔 Lembretes</b>${rm.map(r=>`<button class="wl ${r.warn?'warn':''} ${r.soft?'soft':''}" data-open="${r.app}"><span>${r.e}</span><b class="grow">${esc(r.t)}</b></button>`).join('')}</div>`:''}
-   ${rl?`<div class="wg w-reel" data-post="${rl.id}">${rl.mediaType==='video'?`<video src="${rl.url}" muted autoplay loop playsinline></video>`:`<img src="${rl.url}" alt="">`}<div class="rcap"><b>${esc(rl.petName||'Pet')}</b> ${esc((rl.text||'').slice(0,50))}</div><span class="rtap">▶ ver e reagir</span></div>`:''}`;
+  return `<div class="wg w-hello" data-w="hello"><div class="between"><h3>${sd}${S.tutor?', '+esc(S.tutor):''}!</h3><span class="row" style="gap:4px"><button class="wbtn" id="wGuide" title="Guia passo a passo">🧭 Guia</button><button class="wbtn" id="wReset" title="Reorganizar quadros">↺</button></span></div><div class="quickprompt" id="qp"><span>🔍 O que você precisa agora?</span><kbd>⌘K</kbd></div></div>
+   ${S.lost?'<div class="wg w-alert" data-w="alert" data-open="perfil">🚨 <b>Alerta de pet perdido ativo</b><br><span>Toque para ver a ficha</span></div>':''}
+   ${lv.length?`<div class="wg w-live" data-w="live" data-open="lives"><span class="ldot"></span><b>${lv.length===1?esc(lv[0].petName||lv[0].host?.name||'Alguém')+' está ao vivo':lv.length+' lives agora'}</b><span>Assistir →</span></div>`:''}
+   <div class="wg w-pet" data-w="pet" data-open="perfil"><div class="wav">${S.photo?`<img src="${S.photo}" alt="">`:S.pet.emoji}</div><div class="grow"><b>${esc(pn)}</b><div class="mut">${esc(facts)||'Toque para completar a ficha'}</div>${hasChip()?`<div class="mut">🔖 ${chipShort(S.chip.num)}${S.chip.rg?' · RG '+esc(S.chip.rg):''}</div>`:''}</div></div>
+   <div class="wg w-tutor" data-w="tutor" data-open="${SERVER&&!ME?'__login':'carteira'}"><div class="grow"><b>${lvlName()} · Nv ${lvl()}</b><div class="xp"><i style="width:${(S.xp%200)/2}%"></i></div><div class="mut">${S.xp} XP${S.streak?' · 🔥 '+S.streak+' dias':''} · ${S.credits||0} créditos</div></div><span class="pill ${ME?'ok':'b'}">${ME?'Conta':SERVER?'Visitante · entrar':'Neste aparelho'}</span></div>
+   <div class="wg w-svc" data-w="svc" data-open="servicos"><b class="wt">📅 Serviços contratados</b>${svc.length?svc.slice(0,3).map(x=>`<div class="wl"><span>${x.emoji||'📌'}</span><div class="grow"><b>${esc(x.title)}</b><small>${esc(x.with)}${x.when?' · '+esc(x.when):''}</small></div></div>`).join(''):'<div class="mut">Nada contratado. Toque para ver profissionais.</div>'}</div>
+   ${rm.length?`<div class="wg w-rem" data-w="rem"><b class="wt">🔔 Lembretes</b>${rm.map(r=>`<button class="wl ${r.warn?'warn':''} ${r.soft?'soft':''}" data-open="${r.app}"><span>${r.e}</span><b class="grow">${esc(r.t)}</b></button>`).join('')}</div>`:''}
+   ${rl?`<div class="wg w-reel" data-w="reel" data-post="${rl.id}">${rl.mediaType==='video'?`<video src="${rl.url}" muted autoplay loop playsinline></video>`:`<img src="${rl.url}" alt="">`}<div class="rcap"><b>${esc(rl.petName||'Pet')}</b> ${esc((rl.text||'').slice(0,50))}</div><span class="rtap">▶ ver e reagir</span></div>`:''}`;
 }
 function bindWidgets(el){
   $$('[data-open]',el).forEach(x=>x.onclick=e=>{e.stopPropagation();const a=x.dataset.open;if(a==='__login'){openAuth(()=>{})}else openApp(a)});
-  const qp=$('#qp',el);if(qp)qp.onclick=openSpot;
+  const qp=$('#qp',el);if(qp)qp.onclick=askGuide;
+  const wg=$('#wGuide',el);if(wg)wg.onclick=e=>{e.stopPropagation();askGuide()};const wr=$('#wReset',el);if(wr)wr.onclick=e=>{e.stopPropagation();resetWidgets()};
+  $$('[data-w]',el).forEach(w=>makeDraggable(w,w.dataset.w));
   const rl=$('.wg.w-reel',el);if(rl)rl.onclick=()=>{const id=rl.dataset.post;reelTab='comunidade';openApp('reels');setTimeout(()=>{try{openProjector(id)}catch(e){}},120)};
 }
 
