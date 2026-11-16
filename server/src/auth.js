@@ -48,7 +48,7 @@ function limited(req) {
 }
 
 const IMG_RE = /^data:image\/(jpeg|png|webp);base64,/;
-function saveImage(ownerId, dataUrl) {
+export function saveImage(ownerId, dataUrl) {
   const m = IMG_RE.exec(dataUrl || '');
   if (!m) throw Object.assign(new Error('Imagem inválida (use JPG, PNG ou WebP).'), { status: 400 });
   const buf = Buffer.from(dataUrl.slice(m[0].length), 'base64');
@@ -105,7 +105,8 @@ export function authRouter() {
     res.json({ profile: p ? { ...p, photo: p.photoId ? mediaUrl(p.photoId) : '' } : null });
   });
   r.put('/me/profile', requireAuth, (req, res) => {
-    const allowed = ['onboarded', 'tutor', 'pet', 'goals', 'time', 'story', 'withTutor', 'bgPhoto', 'bgTouched', 'lost', 'chip', 'petSex'];
+    const allowed = ['onboarded', 'tutor', 'pet', 'goals', 'time', 'story', 'withTutor', 'bgPhoto', 'bgTouched', 'lost', 'chip', 'petSex', 'state'];
+    if ('state' in req.body && JSON.stringify(req.body.state || {}).length > 300000) return res.status(413).json({ error: 'Dados grandes demais.' });
     const old = store.profile(req.user.id) || {};
     const p = { ...old };
     for (const k of allowed) if (k in req.body) p[k] = req.body[k];
@@ -152,9 +153,11 @@ export function authRouter() {
   r.get('/feed/stories', requireAuth, (req, res) => res.json({ stories: store.publicStories(req.user.id).map(storyOut) }));
 
   /* ---- mídia: dono sempre; outros só se for de um story público ---- */
-  r.get('/media/:id', requireAuth, (req, res) => {
+  r.get('/media/:id', (req, res) => {
     const m = store.media(req.params.id);
     if (!m) return res.sendStatus(404);
+    if (m.public) { res.setHeader('Cache-Control', 'public, max-age=86400'); return res.type(m.type).sendFile(path.join(UPLOADS, m.file)); }
+    if (!req.user) return res.status(401).json({ error: 'Entre na sua conta para continuar.' });
     const ok = m.ownerId === req.user.id || store.get().stories.some(s => s.mediaId === m.id && store.canSee(s, req.user.id));
     if (!ok) return res.sendStatus(404);
     res.setHeader('Cache-Control', 'private, max-age=3600');

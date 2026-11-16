@@ -12,6 +12,8 @@ import { authRouter, sessionMiddleware, requireAuth } from './auth.js';
 import { postsRouter } from './posts.js';
 import { circlesRouter } from './circles.js';
 import { rankingRouter } from './ranking.js';
+import { listingsRouter } from './listings.js';
+import { livesRouter } from './lives.js';
 
 const { RtcTokenBuilder, RtcRole } = agoraToken;
 const env = process.env;
@@ -32,6 +34,8 @@ app.use('/api', authRouter());
 app.use('/api', postsRouter());
 app.use('/api', circlesRouter());
 app.use('/api', rankingRouter());
+app.use('/api', listingsRouter());
+app.use('/api', livesRouter());
 app.use(express.json({ limit: '2mb' }));
 
 const userOf = req => req.user.id; // sempre a conta logada

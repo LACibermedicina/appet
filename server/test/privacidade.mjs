@@ -10,7 +10,7 @@ const PORT = 4600 + Math.floor(Math.random() * 300);
 const BASE = `http://127.0.0.1:${PORT}`;
 fs.rmSync(path.join(ROOT, 'data.json'), { force: true });
 
-const srv = spawn(process.execPath, ['src/server.js'], { cwd: ROOT, env: { ...process.env, PORT: String(PORT), HOST: '127.0.0.1', AI_ORDER: 'none', ADMIN_EMAILS: 'ana@teste.com' }, stdio: 'inherit' });
+const srv = spawn(process.execPath, ['src/server.js'], { cwd: ROOT, env: { ...process.env, PORT: String(PORT), HOST: '127.0.0.1', AI_ORDER: 'none', ADMIN_EMAILS: 'ana@teste.com', AGORA_APP_ID: '0123456789abcdef0123456789abcdef', AGORA_APP_CERTIFICATE: 'fedcba9876543210fedcba9876543210' }, stdio: 'inherit' });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let falhas = 0;
 const ok = (cond, msg) => { console.log(`${cond ? '✔' : '✘'} ${msg}`); if (!cond) falhas++; };
@@ -143,6 +143,43 @@ try {
   ok(rk2.myBadges.some(b => b.place === 1 && b.postId === reelB.id), 'a medalha aparece no perfil do Beto');
   ok((await A('GET', '/api/feed?kind=reel')).data.posts.find(p => p.id === reelB.id).badges[0]?.place === 1, 'o post premiado mostra o selo para todos');
   ok(rk2.top.length === 0, 'nova rodada começa zerada');
+
+  // ---- dados do pet por conta ----
+  await A('PUT', '/api/me/profile', { state: { vac: [{ n: 'V10', next: '2027-01-01' }], xp: 50 } });
+  ok((await A('GET', '/api/me/profile')).data.profile.state.vac[0].n === 'V10', 'vacinas e progresso ficam salvos na conta');
+  ok(!(await B('GET', '/api/me/profile')).data.profile?.state, 'e não aparecem para outra conta');
+
+  // ---- cadastros reais (no lugar dos exemplos) ----
+  ok((await anon('GET', '/api/listings?type=pro')).data.listings.length === 0, 'sem cadastros reais, a lista de profissionais vem vazia (o app mostra exemplos)');
+  const pro = (await B('POST', '/api/me/listings', { type: 'pro', data: { kind: 'vet', name: 'Dr. Beto', price: 'R$ 150', area: 'Centro', segredo: 'x' } })).data.listing;
+  ok(pro?.data?.name === 'Dr. Beto' && !('segredo' in pro.data), 'Beto se cadastra como veterinário (campos extras ignorados)');
+  const vistoPro = (await anon('GET', '/api/listings?type=pro')).data.listings;
+  ok(vistoPro.length === 1 && vistoPro[0].owner.name === 'Beto' && !('email' in vistoPro[0].owner), 'visitantes veem o cadastro real, sem e-mail do dono');
+  await C('POST', '/api/me/listings', { type: 'match', data: { petName: 'Rex', breed: 'SRD' } });
+  await C('POST', '/api/me/listings', { type: 'match', data: { petName: 'Rex', breed: 'SRD', bio: 'brincalhão' } });
+  ok((await A('GET', '/api/listings?type=match')).data.listings.length === 1, 'cada tutor tem um só perfil no PetMatch');
+  ok((await A('DELETE', `/api/me/listings/${pro.id}`)).status === 404, 'ninguém apaga o cadastro de outra pessoa');
+  const svc = (await A('POST', '/api/me/services', { kind: 'booking', title: 'Consulta', listingId: pro.id, when: 'Sex 10:00', price: 150 })).data.service;
+  ok(svc.with === 'Dr. Beto', 'Ana agenda com o veterinário real');
+  ok((await A('GET', '/api/me/services')).data.services.length === 1, 'o serviço contratado aparece para a Ana');
+  ok((await B('GET', '/api/me/services')).data.received[0]?.client?.name === 'Ana', 'e o pedido chega para o Beto');
+  ok((await C('GET', '/api/me/services')).data.services.length === 0, 'outra conta não vê os serviços da Ana');
+
+  // ---- lives ----
+  ok((await anon('POST', '/api/lives', { title: 'x' })).status === 401, 'sem login não dá para começar live');
+  const lv = (await A('POST', '/api/lives', { title: 'Thor no parque', petName: 'Thor' })).data;
+  ok(lv.token && lv.channel && lv.appId, 'Ana começa uma live e recebe o token de transmissão');
+  ok((await anon('GET', '/api/lives')).data.lives.some(l => l.id === lv.live.id), 'a live aparece na lista para todos');
+  const jn = (await B('POST', `/api/lives/${lv.live.id}/join`)).data;
+  ok(jn.token && jn.token !== lv.token && jn.live.viewers === 1, 'Beto entra como espectador (token de audiência) e conta 1 espectador');
+  await B('POST', `/api/lives/${lv.live.id}/events`, { type: 'chat', text: 'Que lindo!' });
+  await C('POST', `/api/lives/${lv.live.id}/events`, { type: 'react', emoji: 'amei' });
+  ok((await B('POST', `/api/lives/${lv.live.id}/events`, { type: 'react', emoji: 'bomba' })).status === 400, 'reação fora da lista é recusada');
+  const evs = (await A('GET', `/api/lives/${lv.live.id}/events?since=0`)).data.events;
+  ok(evs.some(e => e.type === 'chat' && e.text === 'Que lindo!') && evs.some(e => e.type === 'react' && e.emoji === 'amei'), 'chat e reações chegam para quem transmite');
+  ok((await B('POST', `/api/lives/${lv.live.id}/end`)).status === 404, 'só quem transmite encerra a live');
+  await A('POST', `/api/lives/${lv.live.id}/end`);
+  ok(!(await anon('GET', '/api/lives')).data.lives.length && (await C('POST', `/api/lives/${lv.live.id}/join`)).status === 404, 'live encerrada sai da lista e não aceita novos espectadores');
 
   ok((await A('GET', '/')).status === 200, 'o app (index.html) continua sendo servido');
 } catch (e) {
